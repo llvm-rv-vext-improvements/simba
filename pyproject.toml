@@ -1,0 +1,29 @@
+[project]
+name = "simba"
+version = "0.1.0"
+description = "Easy Benchmarking on XiangShan Simulator"
+authors = [{ name = "vityaman", email = "vityaman.dev@yandex.ru" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.poetry.scripts]
+main = "simba.main:main"
+
+[tool.pylint]
+disable = ["missing-module-docstring", "missing-function-docstring"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.14.2,<0.15.0)",
+    "pylint (>=4.0.2,<5.0.0)",
+    "black (>=25.9.0,<26.0.0)",
+    "isort (>=7.0.0,<8.0.0)",
+    "pyright (>=1.1.407,<2.0.0)",
+    "pyinstrument (>=5.1.1,<6.0.0)",
+]
