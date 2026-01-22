@@ -46,6 +46,9 @@ def main():
     except Exception as e:
         loggy.error(e)
 
+    except KeyboardInterrupt as e:
+        loggy.error("Interrupted")
+
     finally:
         pass
 

@@ -8,14 +8,13 @@ from simba.args.toolchain import Toolchain
 from simba.log import loggy
 
 SCRIPT_LD = """
-OUTPUT_ARCH("riscv")
+MEMORY {
+  RAM (rwxa) : ORIGIN = 0x80000000, LENGTH = 64M
+}
 
 ENTRY(_start)
 
-SECTIONS
-{
-    . = 0x80000000;
-
+SECTIONS {
     .text : {
         *(.text.startup)
         *(.text)
@@ -53,6 +52,8 @@ class MiniProject:
     def __enter__(self) -> "MiniProject":
         self.__build_dir = Path(tempfile.mkdtemp())
         self.__build_dir /= self.__name
+
+        loggy.info(f"Generating {self.__build_dir}...")
 
         dir = self.__build_dir
         dir.mkdir(exist_ok=True)
@@ -109,8 +110,8 @@ class MiniProject:
 
     @property
     def __makefile(self) -> str:
-        sources = [f.name for f in self.__sources]
-        objects = [f"{f}.o" for f in sources]
+        sources = [Path(f.name) for f in self.__sources]
+        objects = [f"{f.stem}.o" for f in sources]
 
         p = self.__toolchain.path / "bin"
         cflags = self.__toolchain.cflags
@@ -120,29 +121,28 @@ class MiniProject:
 
         makefile += f"CFLAGS={cflags}\n"
         makefile += f"CC={p}/clang\n"
-        makefile += f"AS={p}/clang\n"
         makefile += f"LD={p}/ld.lld\n"
-        makefile += f"OBJDUMP={p}/llvm-objdump\n"
-        makefile += f"OBJCOPY={p}/llvm-objcopy\n"
-        makefile += f"AR={p}/llvm-ar\n"
         makefile += "\n"
 
         for source in sources:
-            makefile += f"{source}.o: {" ".join(sources)}\n"
+            makefile += f"{source.stem}.o: {" ".join(map(str, sources))}\n"
             makefile += f"\t{self.__compile(source)}\n"
             makefile += "\n"
 
         makefile += f"{self.executable_file}: Makefile script.ld {" ".join(objects)}\n"
         makefile += (
-            f"\t$(LD) -T script.ld -o {self.executable_file} {" ".join(objects)}\n"
+            f"\t$(LD) -T script.ld {" ".join(objects)} -o {self.executable_file}\n"
         )
         makefile += "\n"
 
         return makefile
 
-    def __compile(self, source: str) -> str:
-        if source.endswith(".c") or source.endswith(".ll") or source.endswith(".S"):
-            return f"$(CC) $(CFLAGS) -c {source} -o {source}.o"
+    def __compile(self, source: Path) -> str:
+        def is_a(ext: str):
+            return str(source).endswith(ext)
+
+        if is_a(".c") or is_a(".ll") or is_a(".S"):
+            return f"$(CC) $(CFLAGS) -c {source} -o {source.stem}.o"
         raise ValueError(
             f"do not known how to compile {source}, .c/.ll/.S was expected"
         )
