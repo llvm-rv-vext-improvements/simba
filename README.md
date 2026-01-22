@@ -1,80 +1,116 @@
 # SimBa
 
 SimBa (Simulator Benchmarking) is a tool to easily get performance metrics
-of a source code (C and LLVM IR), compiled by a given compiler, configured
-by a given compilation flags, ran on a XiangShan (RISC-V) Verilator simulator.
+of a source code (C, LLVM IR, RISC-V ASM), compiled by a given compiler,
+configured by given compilation flags, ran on a XiangShan (RISC-V) Verilator
+simulator. The tool supports only bare-metal applications.
 
 SimBa focuses on user-friendliness for a daily usage, but also can be used at
 CI/CD pipelines.
 
-## Functionality
+Also SimBa is the next generation of [SimuBen](https://github.com/llvm-rv-vext-improvements/simuben).
 
-1. Running a bare metal executable on a given Verilator simulator.
 
-```sh
-simba run executable ./a.out
-```
+## Usage
 
-2. "Running" C and LLVM IR sources into a bare metal binary.
+1. For an installation guide go to the [Development](#development) section.
 
-```sh
-simba run miniproject ./main.c ./lib.ll
-simba run miniproject ./sample/
-```
-
-3. Output performance metrics such as instructions and cycles count
-   in various formats.
+2. To run an "executable" binary:
 
 ```sh
-simba run miniproject ./hello/main.c --name=hello --output-format=json
-# {
-#   "name": "hello",
-#   "instructions": 1999,
-#   "cycles": 19858
-# }
+simba run executable image-riscv64.bin > /tmp/bench.json
 ```
 
-4. Configuration via a JSON file with an extension by ARGV.
+3. To compile and run a bunch of sources:
 
 ```sh
-simba run ... --config-path=/home/xxx/.simba.json
-
-simba conf path
-# /home/xxx/.simba.json
-
-cat /home/xxx/.simba.json
-# {
-#     "verilator_path": "/home/xxx/emu",
-#     "output_format": "json",
-#     "toolchain_base": {
-#        "path": "/usr/lib/llvm-18",
-#        "cflags": "A B C"
-#     },
-#     "toolchain_matrix": [
-#         {
-#           "cflags": "D E F"
-#         },
-#     ]
-# }
+simba run sources main.S my.c your.ll > /tmp/bench.json
 ```
 
-5. "Running" an entire miniproject suite.
+4. A miniproject -- is a directory, containing a bunch of sources.
+   To compile and run it:
 
 ```sh
-simba run suite ./suites --output-format=json
-# [
-#   {
-#     "name": "hello",
-#     "instructions": 1999,
-#     "cycles": 19858
-#   },
-#     "name": "goodbye",
-#     "instructions": 5131,
-#     "cycles": 78126
-#   },
-# ]
+simba run miniproject my/test/suites/aplusb > /tmp/bench.json
 ```
 
-6. "Running" with a configuration matrix.
+5. A suite -- is a directory, containing a bunch of miniprojects.
+   To compile and run each of them:
 
-7. Visualizing benchmarking results via a Web page.
+```sh
+simba run suite my/test/suite > /tmp/bench.json
+```
+
+6. SimBa requires an existsing configuration file in the current directory,
+   called `.simba.json`. You must provide a Verilator simulator, path to the
+   LLVM toolchain, shared CFLAGS. Also you should define multiple toolchains
+   for a performance differential testing. Each provided toolchain will be
+   merged with a base one. Here is an example:
+
+```json
+{
+  "verilator_path": "/home/xxx/emu",
+  "toolchain_base": {
+    "path": "/usr/lib/llvm-18",
+    "cflags": "--target=riscv64 -march=rv64gc -mcmodel=medany"
+  },
+  "toolchain_extra": [
+    { "cflags": "-O0" },
+    { "cflags": "-O3" }
+  ]
+}
+```
+
+7. When the run is done, SimBa will output results in a JSON format to stdout,
+   it is recommended to redirect it to some file.
+
+8. That results can be converted to fancy HTML page.
+
+```sh
+simba convert html < /tmp/bench.json > /tmp/bench.html
+```
+
+<img src="./docs/simba-report.jpg" alt="SimBa Report HTML Page" width="600"/>
+
+9. That results can be converted to a CSV file.
+
+```sh
+simba convert csv < /tmp/bench.json > /tmp/bench.csv
+```
+
+
+## Development
+
+1. You need to have the [Poetry](https://python-poetry.org/) installed.
+
+2. Clone the repository and enter to the project root directory.
+
+```sh
+git clone git@github.com:llvm-rv-vext-improvements/simba.git
+cd simba
+```
+
+3. Prepare the project.
+
+```sh
+poetry install
+```
+
+4. Build the project.
+
+```sh
+poetry build
+```
+
+5. Install the `simba` to the `pipx`.
+
+```sh
+# `--force` is used for a developement experience only
+pipx install dist/simba-0.1.0-py3-none-any.whl --force
+```
+
+6. Run style checks.
+
+```sh
+./script/test.sh style
+```
