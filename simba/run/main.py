@@ -60,15 +60,6 @@ def main(args: Args):
         for report in execute(tasks):
             reports.append(report)
 
-            loggy.info(
-                "Executed '%s' by %s, spent %ss real time, got %s cycles, %s instrs",
-                report.name,
-                report.toolchain,
-                round(report.simulation_time.total_seconds()),
-                report.cycles_count,
-                report.instrunctions_count,
-            )
-
     loggy.info("Total %ss real time spent", round(timer.duration.total_seconds()))
 
     print(reports_to_json(reports))
