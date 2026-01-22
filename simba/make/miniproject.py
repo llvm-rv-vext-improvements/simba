@@ -35,6 +35,24 @@ SECTIONS {
 """
 
 
+TRAMPOLINE = """
+.macro XiangShanTrap arg
+    li a0, 0
+    .word 0x5006b
+.endm
+
+.section .text.startup
+
+.global _start
+_start:
+    li sp, 0x80001000
+
+    call main
+
+    XiangShanTrap 0
+"""
+
+
 class MiniProject:
     def __init__(
         self,
@@ -62,13 +80,19 @@ class MiniProject:
             dst = dir / src.name
             shutil.copyfile(src, dst)
 
-        makefile = dir / "Makefile"
-        with open(makefile, "w") as f:
-            f.write(self.__makefile)
-
         script_ld = dir / "script.ld"
         with open(script_ld, "w") as f:
             f.write(SCRIPT_LD)
+
+        if not self.__is_trampoline_present:
+            trampoline = dir / "simba_trampoline.S"
+            with open(trampoline, 'w') as f:
+                f.write(TRAMPOLINE)
+            self.__sources.append(trampoline)
+
+        makefile = dir / "Makefile"
+        with open(makefile, "w") as f:
+            f.write(self.__makefile)
 
         return self
 
@@ -109,6 +133,20 @@ class MiniProject:
         return self.__build_dir / self.executable_file
 
     @property
+    def __is_trampoline_present(self) -> bool:
+        for source in self.__sources:
+            if source.suffix != ".S":
+                continue
+
+            with open(source) as f:
+                content = f.read()
+
+            if "_start" in content:
+                return True
+
+        return False
+
+    @property
     def __makefile(self) -> str:
         sources = [Path(f.name) for f in self.__sources]
         objects = [f"{f.stem}.o" for f in sources]
@@ -139,7 +177,7 @@ class MiniProject:
 
     def __compile(self, source: Path) -> str:
         def is_a(ext: str):
-            return str(source).endswith(ext)
+            return source.suffix == ext
 
         if is_a(".c") or is_a(".ll") or is_a(".S"):
             return f"$(CC) $(CFLAGS) -c {source} -o {source.stem}.o"
