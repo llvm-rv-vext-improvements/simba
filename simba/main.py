@@ -1,4 +1,5 @@
 from concurrent.futures import ProcessPoolExecutor
+import json
 import os
 from typing import Iterable, List
 
@@ -12,7 +13,7 @@ from simba.args.argv import (
 )
 from simba.run.run_executable import run_executable
 from simba.run.plan_miniproject import plan_miniproject
-from simba.run.report import Report
+from simba.run.report import RawReport, Report
 from simba.run.plan_sources import plan_sources
 from simba.run.plan_suite import plan_suite
 from simba.run.task import Plan, execute_task
@@ -72,6 +73,14 @@ def main():
                 )
 
         loggy.info("Total %ss real time spent", round(timer.duration.total_seconds()))
+
+        print(
+            json.dumps(
+                [RawReport.from_pure(report).model_dump() for report in reports],
+                indent=4,
+                sort_keys=True,
+            )
+        )
 
     except Exception as e:
         loggy.error(e)

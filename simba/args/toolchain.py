@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 
 class RawToolchain(BaseModel):
-    path: Path | None = None
+    path: str | None = None
     cflags: str | None = None
 
     def __or__(self, that: "RawToolchain") -> "RawToolchain":
@@ -34,7 +34,7 @@ class Toolchain(NamedTuple):
                 raise ValueError(f"expected a {name}, but got none")
 
         return Toolchain(
-            path=unwrap(raw.path, "path"),
+            path=Path(unwrap(raw.path, "path")),
             cflags=unwrap(raw.cflags, "cflags"),
         )
 
