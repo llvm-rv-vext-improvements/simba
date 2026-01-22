@@ -22,6 +22,9 @@ class Toolchain(NamedTuple):
     path: Path
     cflags: str
 
+    def __repr__(self) -> str:
+        return f"path '{str(self.path)}' cflags '{self.cflags}'"
+
     @classmethod
     def from_raw(cls, raw: RawToolchain) -> "Toolchain":
         def unwrap(x, name):

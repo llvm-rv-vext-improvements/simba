@@ -1,17 +1,14 @@
-from typing import Iterable
-
 from simba.args.argv import RunMiniprojectArgs, RunSuiteArgs, TArgs
-from simba.run.miniproject import run_miniproject
-from simba.run.report import ReportedRun
+from simba.run.plan_miniproject import plan_miniproject
+from simba.run.task import Plan
 from simba.verilator.core import Verilator
-from simba.log import loggy
 
-def run_suite(verilator: Verilator, args: TArgs[RunSuiteArgs]) -> Iterable[ReportedRun]:
+
+def plan_suite(verilator: Verilator, args: TArgs[RunSuiteArgs]) -> Plan:
     subdirs = [f for f in args.run.path.iterdir() if f.is_dir()]
-    loggy.info(f"Going to run {', '.join(map(str, subdirs))}")
 
     for subdir in subdirs:
-        yield from run_miniproject(
+        yield from plan_miniproject(
             verilator,
             TArgs(
                 common=args.common,

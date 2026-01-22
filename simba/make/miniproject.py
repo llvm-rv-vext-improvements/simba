@@ -5,7 +5,6 @@ import tempfile
 from typing import List
 
 from simba.args.toolchain import Toolchain
-from simba.log import loggy
 
 SCRIPT_LD = """
 MEMORY {
@@ -71,8 +70,6 @@ class MiniProject:
         self.__build_dir = Path(tempfile.mkdtemp())
         self.__build_dir /= self.__name
 
-        loggy.info(f"Generating {self.__build_dir}...")
-
         dir = self.__build_dir
         dir.mkdir(exist_ok=True)
 
@@ -98,15 +95,9 @@ class MiniProject:
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         if self.__is_cleaning:
-            loggy.info(f"Removing {self.__build_dir}...")
             shutil.rmtree(self.__build_dir)
 
     def build(self):
-        loggy.info(
-            f"Building {', '.join([f.name for f in self.__sources])} "
-            + f"with cflags '{self.__toolchain.cflags}'..."
-        )
-
         result = subprocess.run(
             ["make", self.executable_file],
             cwd=self.__build_dir,
@@ -131,6 +122,10 @@ class MiniProject:
     @property
     def executable_path(self) -> Path:
         return self.__build_dir / self.executable_file
+
+    @property
+    def toolchain(self) -> Toolchain:
+        return self.__toolchain
 
     @property
     def __is_trampoline_present(self) -> bool:

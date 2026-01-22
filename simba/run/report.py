@@ -1,14 +1,21 @@
-from typing import NamedTuple
+from typing import Dict, List, NamedTuple
+from datetime import timedelta
 
-from simba.args.toolchain import Toolchain
+from pydantic import BaseModel
+
+from simba.args.toolchain import RawToolchain, Toolchain
 
 
-class ReportedRun(NamedTuple):
+class Report(NamedTuple):
     name: str
     toolchain: Toolchain | None
     instrunctions_count: int
     cycles_count: int
+    simulation_time: timedelta
 
 
-class Report(NamedTuple):
-    runs: list[ReportedRun]
+class RawReport(BaseModel):
+    name: str
+    toolchain: RawToolchain | None = None
+    instrunctions_count: int
+    cycles_count: int
