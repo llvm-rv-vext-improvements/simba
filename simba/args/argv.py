@@ -13,6 +13,19 @@ class RunKind(Enum):
     SUITE = "suite"
 
 
+class FormatKind(Enum):
+    JSON = "json"
+    CSV = "csv"
+    HTML = "html"
+
+    @classmethod
+    def from_value(cls, value):
+        for member in cls:
+            if member.value == value:
+                return member
+        raise ValueError(f"{value} is not a valid {cls.__name__}")
+
+
 class RunExecutableArgs(NamedTuple):
     path: Path
 
@@ -29,6 +42,10 @@ class RunSuiteArgs(NamedTuple):
     path: Path
 
 
+class ConvertArgs(NamedTuple):
+    format: FormatKind
+
+
 class TArgs[T](NamedTuple):
     common: CommonArgs
     run: T
@@ -36,7 +53,7 @@ class TArgs[T](NamedTuple):
 
 class Args(NamedTuple):
     common: CommonArgs
-    run: RunExecutableArgs | RunSourcesArgs | RunMiniprojectArgs | RunSuiteArgs
+    action: RunExecutableArgs | RunSourcesArgs | RunMiniprojectArgs | RunSuiteArgs | ConvertArgs
 
     @classmethod
     def from_argv(cls) -> "Args":
@@ -66,6 +83,16 @@ class Args(NamedTuple):
             help="Paths to source files or directories",
         )
 
+        convert_parser = subparsers.add_parser(
+            "convert",
+            help="Convert benchmarking report",
+        )
+        convert_parser.add_argument(
+            "output",
+            choices=[kind.value for kind in FormatKind],
+            help="Output format",
+        )
+
         args = parser.parse_args()
 
         common_args = RawCommonArgs.read_json(RawCommonArgs.resolve_path())
@@ -88,7 +115,14 @@ class Args(NamedTuple):
 
             return Args(
                 common=common,
-                run=run,
+                action=run,
+            )
+        elif args.command == "convert":
+            return Args(
+                common=common,
+                action=ConvertArgs(
+                    format=FormatKind.from_value(args.output),
+                ),
             )
         elif args.command is None:
             raise ValueError(f"command expected, got nothing")
