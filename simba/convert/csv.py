@@ -37,12 +37,12 @@ def reports_to_table(reports: List[Report]) -> Iterable[BenchmarkRow]:
             raise ValueError(f"unexpected empty {name}")
         return x
 
-    reports_by_name: Dict[str, List[Report]] = dict()
+    reports_by_name: Dict[str, List[Report]] = {}
     for report in reports:
         reports_by_name[report.name] = reports_by_name.get(report.name, [])
         reports_by_name[report.name].append(report)
 
-    for name, reports in reports_by_name.items():
+    for name, enemies in reports_by_name.items():
         yield BenchmarkRow(
             name=name,
             measurements=[
@@ -51,7 +51,7 @@ def reports_to_table(reports: List[Report]) -> Iterable[BenchmarkRow]:
                     instrs=report.instrunctions_count,
                     cycles=report.cycles_count,
                 )
-                for report in reports
+                for report in enemies
             ],
         )
 

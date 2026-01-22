@@ -1,6 +1,6 @@
-from pathlib import Path
-from typing import Dict, List, NamedTuple
 from datetime import timedelta
+from pathlib import Path
+from typing import NamedTuple
 
 from pydantic import BaseModel
 

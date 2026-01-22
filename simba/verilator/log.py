@@ -1,7 +1,7 @@
-from dataclasses import dataclass, field
 import re
 from collections import defaultdict
-from typing import Iterable, List, DefaultDict
+from dataclasses import dataclass, field
+from typing import DefaultDict, Iterable, List
 
 Time = int
 MetricNamespace = str

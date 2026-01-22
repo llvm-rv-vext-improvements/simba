@@ -3,7 +3,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, List, NamedTuple
 
-from simba.args.common import RawCommonArgs, CommonArgs
+from simba.args.common import CommonArgs, RawCommonArgs
 
 
 class RunKind(Enum):
@@ -53,7 +53,13 @@ class TArgs[T](NamedTuple):
 
 class Args(NamedTuple):
     common: CommonArgs
-    action: RunExecutableArgs | RunSourcesArgs | RunMiniprojectArgs | RunSuiteArgs | ConvertArgs
+    action: (
+        RunExecutableArgs
+        | RunSourcesArgs
+        | RunMiniprojectArgs
+        | RunSuiteArgs
+        | ConvertArgs
+    )
 
     @classmethod
     def from_argv(cls) -> "Args":
@@ -117,17 +123,19 @@ class Args(NamedTuple):
                 common=common,
                 action=run,
             )
-        elif args.command == "convert":
+
+        if args.command == "convert":
             return Args(
                 common=common,
                 action=ConvertArgs(
                     format=FormatKind.from_value(args.output),
                 ),
             )
-        elif args.command is None:
-            raise ValueError(f"command expected, got nothing")
-        else:
-            raise ValueError(f"unexpected command '{args.command}'")
+
+        if args.command is None:
+            raise ValueError("command expected, got nothing")
+
+        raise ValueError(f"unexpected command '{args.command}'")
 
     @classmethod
     def __parse_run_executable(cls, args: Any) -> RunExecutableArgs:

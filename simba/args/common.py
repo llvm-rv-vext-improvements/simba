@@ -1,5 +1,5 @@
-from typing import List, NamedTuple
 from pathlib import Path
+from typing import List, NamedTuple
 
 from pydantic import BaseModel, ValidationError
 
@@ -19,16 +19,16 @@ class RawCommonArgs(BaseModel):
     @classmethod
     def read_json(cls, path: Path) -> "RawCommonArgs":
         try:
-            with open(path, "r") as f:
+            with open(path, "r", encoding="utf-8") as f:
                 data = f.read()
                 return cls.model_validate_json(data)
         except ValidationError as e:
             message = ", ".join(
                 [f'{err["loc"][0]} {err["type"]}' for err in e.errors()]
             )
-            raise ValueError(f"failed to parse config: {message}")
+            raise ValueError(f"failed to parse config: {message}") from e
         except Exception as e:
-            raise RuntimeError(f"failed to read config: {e}")
+            raise RuntimeError(f"failed to read config: {e}") from e
 
 
 class CommonArgs(NamedTuple):
@@ -48,7 +48,7 @@ class CommonArgs(NamedTuple):
             try:
                 toolchains.append(Toolchain.from_raw(toolchain))
             except ValueError as e:
-                raise ValueError(f"bad {i}th toolchain: {e}", e)
+                raise ValueError(f"bad {i}th toolchain: {e}") from e
 
         return CommonArgs(
             verilator_path=raw.verilator_path,

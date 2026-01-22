@@ -12,7 +12,11 @@ dependencies = ["pydantic (>=2.12.5,<3.0.0)"]
 simba = "simba.main:main"
 
 [tool.pylint]
-disable = ["missing-module-docstring", "missing-function-docstring"]
+disable = [
+    "missing-module-docstring",
+    "missing-function-docstring",
+    "missing-class-docstring",
+]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]

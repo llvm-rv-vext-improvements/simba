@@ -2,14 +2,6 @@
 
 set -e
 
-function regression() {
-    FILE="$1"
-    MESSAGE="$2"
-
-    echo -e "${GREEN}🚬 [satty] Regression '$MESSAGE'...${NC}"
-    SATTY_DEBUG=1 poetry run python solver.py "$FILE"
-}
-
 # Color definitions
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -25,19 +17,19 @@ MODE="$1"
 
 if [ "$MODE" == "style" ]; then
 
-    echo -e "${BLUE}🔍 [satty] Running Ruff...${NC}"
+    echo -e "${BLUE}🔍 [simba] Running Ruff...${NC}"
     poetry run ruff check "$SRCS"
 
-    echo -e "${YELLOW}🐝 [satty] Running PyLint...${NC}"
+    echo -e "${YELLOW}🐝 [simba] Running PyLint...${NC}"
     poetry run pylint "$SRCS"
 
-    echo -e "${CYAN}⚫ [satty] Running Black...${NC}"
+    echo -e "${CYAN}⚫ [simba] Running Black...${NC}"
     poetry run black "$SRCS"
 
-    echo -e "${PURPLE}🌀 [satty] Running isort...${NC}"
+    echo -e "${PURPLE}🌀 [simba] Running isort...${NC}"
     poetry run isort "$SRCS"
 
-    echo -e "${BLUE}🔵 [satty] Running Pyright...${NC}"
+    echo -e "${BLUE}🔵 [simba] Running Pyright...${NC}"
     poetry run pyright "$SRCS"
 
 else

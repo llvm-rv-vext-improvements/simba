@@ -1,11 +1,8 @@
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
-from simba.verilator.log import (
-    VerilatorLog,
-    verilator_brief_log_parse,
-    verilator_perf_log_parse,
-)
+from simba.verilator.log import (VerilatorLog, verilator_brief_log_parse,
+                                 verilator_perf_log_parse)
 
 
 class Verilator:
@@ -27,19 +24,18 @@ class Verilator:
             str(executable),
         ]
 
-        process = subprocess.Popen(
+        with subprocess.Popen(
             command,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-        )
+        ) as p:
+            stdout, stderr = p.communicate()
 
-        stdout, stderr = process.communicate()
-
-        if process.returncode != 0:
-            raise RuntimeError(
-                f"{' '.join(command)} returned {process.returncode}: {process.stderr}",
-            )
+            if p.returncode != 0:
+                raise RuntimeError(
+                    f"{' '.join(command)} returned {p.returncode}: {p.stderr}",
+                )
 
         return VerilatorLog(
             brief=verilator_brief_log_parse(stdout.splitlines()),

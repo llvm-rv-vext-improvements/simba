@@ -18,6 +18,6 @@ def reports_to_json(reports: List[Report]) -> str:
     )
 
 
-def reports_from_json(json: str) -> List[Report]:
-    raws = TypeAdapter(List[RawReport]).validate_json(json)
+def reports_from_json(content: str) -> List[Report]:
+    raws = TypeAdapter(List[RawReport]).validate_json(content)
     return [raw.to_pure() for raw in raws]

@@ -1,7 +1,6 @@
 import logging
 import sys
 
-
 loggy = logging.getLogger("simba")
 loggy.setLevel(logging.INFO)
 

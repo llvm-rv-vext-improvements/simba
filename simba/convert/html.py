@@ -6,6 +6,9 @@ from simba.convert.csv import DiffBenchmarkRow
 
 
 def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
+    # LLM-generated
+    # pylint: disable=all
+
     table = list(table)
     max_diffs = max((len(row.diffs) for row in table), default=0)
 
@@ -22,7 +25,16 @@ def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
 
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    toolchain_colors = ['#0d6efd', '#198754', '#ffc107', '#dc3545', '#6f42c1', '#0dcaf0', '#d63384', '#6c757d']
+    toolchain_colors = [
+        "#0d6efd",
+        "#198754",
+        "#ffc107",
+        "#dc3545",
+        "#6f42c1",
+        "#0dcaf0",
+        "#d63384",
+        "#6c757d",
+    ]
     color_css_parts = []
     for i in range(len(sorted_toolchains)):
         letter = chr(ord("A") + i)
@@ -40,7 +52,9 @@ def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
 
     divider_css = ""
     if divider_indices:
-        selectors = ",\n        ".join([f"th:nth-child({i}), td:nth-child({i})" for i in divider_indices])
+        selectors = ",\n        ".join(
+            [f"th:nth-child({i}), td:nth-child({i})" for i in divider_indices]
+        )
         divider_css = f"{selectors} {{ border-right: 2px solid #555; }}"
 
     css = f"""
@@ -178,22 +192,29 @@ def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
             row_parts.append(f"<td>{html.escape(row.name)}</td>")
 
             base_conf_letter = toolchain_map.get(row.base.toolchain, "?")
-            row_parts.append(f'<td class="tc-{base_conf_letter}">{base_conf_letter}</td>')
+            row_parts.append(
+                f'<td class="tc-{base_conf_letter}">{base_conf_letter}</td>'
+            )
             row_parts.append(f"<td>{row.base.instrs:,}</td>")
             row_parts.append(f"<td>{row.base.cycles:,}</td>")
 
             for diff in row.diffs:
+
                 def get_diff_class(val):
-                    return "negative-diff" if val > 0 else "positive-diff" if val < 0 else ""
+                    return (
+                        "negative-diff"
+                        if val > 0
+                        else "positive-diff" if val < 0 else ""
+                    )
 
                 diff_conf_letter = toolchain_map.get(diff.toolchain, "?")
                 row_parts.extend(
                     [
                         f'<td class="tc-{diff_conf_letter}">{diff_conf_letter}</td>',
-                        f'<td>{diff.instrs:,}</td>',
+                        f"<td>{diff.instrs:,}</td>",
                         f'<td class="{get_diff_class(diff.instrs_diff_abs)}">{diff.instrs_diff_abs:+,}</td>',
                         f'<td class="{get_diff_class(diff.instrs_diff_rel)}" data-sort-value="{diff.instrs_diff_rel}">{diff.instrs_diff_rel:+.2%}</td>',
-                        f'<td>{diff.cycles:,}</td>',
+                        f"<td>{diff.cycles:,}</td>",
                         f'<td class="{get_diff_class(diff.cycles_diff_abs)}">{diff.cycles_diff_abs:+,}</td>',
                         f'<td class="{get_diff_class(diff.cycles_diff_rel)}" data-sort-value="{diff.cycles_diff_rel}">{diff.cycles_diff_rel:+.2%}</td>',
                     ]

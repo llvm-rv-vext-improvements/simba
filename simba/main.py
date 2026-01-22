@@ -1,7 +1,4 @@
-from simba.args.argv import (
-    Args,
-    ConvertArgs,
-)
+from simba.args.argv import Args, ConvertArgs
 from simba.convert.main import run_convert
 from simba.log import loggy
 from simba.run.main import main as run_main
@@ -19,10 +16,10 @@ def main():
         else:
             raise RuntimeError(f"unexpected type: {type(args.action)}")
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         loggy.error(e)
 
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         loggy.error("Interrupted")
 
 

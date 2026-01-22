@@ -30,8 +30,8 @@ class Toolchain(NamedTuple):
         def unwrap(x, name):
             if x is not None:
                 return x
-            else:
-                raise ValueError(f"expected a {name}, but got none")
+
+            raise ValueError(f"expected a {name}, but got none")
 
         return Toolchain(
             path=Path(unwrap(raw.path, "path")),

@@ -1,7 +1,7 @@
-from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+from pathlib import Path
 from typing import List
 
 from simba.args.toolchain import Toolchain
@@ -70,25 +70,25 @@ class MiniProject:
         self.__build_dir = Path(tempfile.mkdtemp())
         self.__build_dir /= self.__name
 
-        dir = self.__build_dir
-        dir.mkdir(exist_ok=True)
+        d = self.__build_dir
+        d.mkdir(exist_ok=True)
 
         for src in self.__sources:
-            dst = dir / src.name
+            dst = d / src.name
             shutil.copyfile(src, dst)
 
-        script_ld = dir / "script.ld"
-        with open(script_ld, "w") as f:
+        script_ld = d / "script.ld"
+        with open(script_ld, "w", encoding="utf-8") as f:
             f.write(SCRIPT_LD)
 
         if not self.__is_trampoline_present:
-            trampoline = dir / "simba_trampoline.S"
-            with open(trampoline, 'w') as f:
+            trampoline = d / "simba_trampoline.S"
+            with open(trampoline, "w", encoding="utf-8") as f:
                 f.write(TRAMPOLINE)
             self.__sources.append(trampoline)
 
-        makefile = dir / "Makefile"
-        with open(makefile, "w") as f:
+        makefile = d / "Makefile"
+        with open(makefile, "w", encoding="utf-8") as f:
             f.write(self.__makefile)
 
         return self
@@ -133,7 +133,7 @@ class MiniProject:
             if source.suffix != ".S":
                 continue
 
-            with open(source) as f:
+            with open(source, "r", encoding="utf-8") as f:
                 content = f.read()
 
             if "_start" in content:

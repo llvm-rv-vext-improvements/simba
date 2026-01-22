@@ -10,7 +10,7 @@ def plan_sources(
     name: str | None = None,
 ) -> Plan:
     if len(args.common.toolchains) <= 0:
-        raise ValueError(f"expected at least one toolchain, but got 0")
+        raise ValueError("expected at least one toolchain, but got 0")
 
     for toolchain in args.common.toolchains:
         yield Task(

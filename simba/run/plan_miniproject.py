@@ -1,6 +1,6 @@
 from simba.args.argv import RunMiniprojectArgs, RunSourcesArgs, TArgs
-from simba.run.task import Plan
 from simba.run.plan_sources import plan_sources
+from simba.run.task import Plan
 from simba.verilator.core import Verilator
 
 

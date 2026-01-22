@@ -5,6 +5,8 @@ from datetime import timedelta
 class Stopwatch:
     def __init__(self):
         self.duration = timedelta()
+        self.start: float = 0
+        self.end: float = 0
 
     def __enter__(self):
         self.start = time.perf_counter()

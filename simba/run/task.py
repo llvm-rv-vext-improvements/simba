@@ -1,10 +1,10 @@
 from typing import Iterable, NamedTuple
 
+from simba.log import loggy
 from simba.make.miniproject import MiniProject
 from simba.run.report import Report
 from simba.stopwatch import Stopwatch
 from simba.verilator.core import Verilator
-from simba.log import loggy
 
 
 class Task(NamedTuple):

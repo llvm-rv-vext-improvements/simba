@@ -1,26 +1,19 @@
-from concurrent.futures import ProcessPoolExecutor
-import json
 import os
+from concurrent.futures import ProcessPoolExecutor
 from typing import Iterable, List
 
-from simba.args.argv import (
-    Args,
-    RunExecutableArgs,
-    RunMiniprojectArgs,
-    RunSourcesArgs,
-    RunSuiteArgs,
-    TArgs,
-)
+from simba.args.argv import (Args, RunExecutableArgs, RunMiniprojectArgs,
+                             RunSourcesArgs, RunSuiteArgs, TArgs)
 from simba.convert.json import reports_to_json
-from simba.run.run_executable import run_executable
+from simba.log import loggy
 from simba.run.plan_miniproject import plan_miniproject
-from simba.run.report import RawReport, Report
 from simba.run.plan_sources import plan_sources
 from simba.run.plan_suite import plan_suite
+from simba.run.report import Report
+from simba.run.run_executable import run_executable
 from simba.run.task import Plan, execute_task
 from simba.stopwatch import Stopwatch
 from simba.verilator.core import Verilator
-from simba.log import loggy
 
 
 def plan(args: Args) -> Plan:
@@ -28,7 +21,8 @@ def plan(args: Args) -> Plan:
 
     if isinstance(args.action, RunExecutableArgs):
         raise NotImplementedError
-    elif isinstance(args.action, RunSourcesArgs):
+
+    if isinstance(args.action, RunSourcesArgs):
         yield from plan_sources(verilator, TArgs(args.common, args.action))
     elif isinstance(args.action, RunMiniprojectArgs):
         yield from plan_miniproject(verilator, TArgs(args.common, args.action))
@@ -38,10 +32,10 @@ def plan(args: Args) -> Plan:
         raise RuntimeError(f"unexpected type: {type(args.action)}")
 
 
-def execute(plan: Plan, j: int = os.cpu_count() or 1) -> Iterable[Report]:
+def execute(tasks: Plan, j: int = os.cpu_count() or 1) -> Iterable[Report]:
     with ProcessPoolExecutor(max_workers=j) as executor:
         # Preserves an order and it is important!
-        yield from executor.map(execute_task, plan)
+        yield from executor.map(execute_task, tasks)
 
 
 def main(args: Args):
