@@ -2,8 +2,14 @@ import os
 from concurrent.futures import ProcessPoolExecutor
 from typing import Iterable, List
 
-from simba.args.argv import (Args, RunExecutableArgs, RunMiniprojectArgs,
-                             RunSourcesArgs, RunSuiteArgs, TArgs)
+from simba.args.argv import (
+    Args,
+    RunExecutableArgs,
+    RunMiniprojectArgs,
+    RunSourcesArgs,
+    RunSuiteArgs,
+    TArgs,
+)
 from simba.convert.json import reports_to_json
 from simba.log import loggy
 from simba.run.plan_miniproject import plan_miniproject

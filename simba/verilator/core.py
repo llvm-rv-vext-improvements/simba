@@ -1,8 +1,11 @@
 import subprocess
 from pathlib import Path
 
-from simba.verilator.log import (VerilatorLog, verilator_brief_log_parse,
-                                 verilator_perf_log_parse)
+from simba.verilator.log import (
+    VerilatorLog,
+    verilator_brief_log_parse,
+    verilator_perf_log_parse,
+)
 
 
 class Verilator:

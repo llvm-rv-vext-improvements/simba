@@ -1,0 +1,50 @@
+name: Check
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: snok/install-poetry@v1
+        with:
+          virtualenvs-in-project: true
+
+      - name: Cache Dependencies
+        id: cache-deps
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+
+      - name: Install Dependencies
+        run: poetry install --no-interaction
+
+      - name: Build
+        run: poetry build
+
+      - name: Check CLI command
+        run: poetry run simba --help
+
+      - name: Ruff
+        run: poetry run ruff check simba
+
+      - name: Pylint
+        run: poetry run pylint simba
+
+      - name: Black
+        run: poetry run black --check simba
+
+      - name: Pyright
+        run: poetry run pyright simba
