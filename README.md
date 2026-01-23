@@ -10,7 +10,6 @@ CI/CD pipelines.
 
 Also SimBa is the next generation of [SimuBen](https://github.com/llvm-rv-vext-improvements/simuben).
 
-
 ## Usage
 
 1. For an installation guide go to the [Development](#development) section.
@@ -78,7 +77,6 @@ simba convert html < /tmp/bench.json > /tmp/bench.html
 simba convert csv < /tmp/bench.json > /tmp/bench.csv
 ```
 
-
 ## Development
 
 1. You need to have the [Poetry](https://python-poetry.org/) installed.
@@ -113,4 +111,54 @@ pipx install dist/simba-0.1.0-py3-none-any.whl --force
 
 ```sh
 ./script/test.sh style
+```
+
+## GDB Guide
+
+You can face with a bug in a SimBa generated project because of inproper
+CPU initialization. Then you need a way to debug this and here the GDB
+will help.
+
+1. Install the QEMU with RISC-V support and GDB Multiarch.
+
+```sh
+sudo apt install qemu-system-riscv64
+sudo apt install gdb-multiarch
+```
+
+2. Start the QEMU waiting for a debugger in a separate terminal.
+
+```sh
+qemu-system-riscv64 -machine virt -nographic -s -S
+```
+
+3. Enter the directory, containing a buggy image (e.g. app-riscv64.bin),
+   and lauch the GDB.
+
+```sh
+gdb-multiarch app-riscv64.bin
+```
+
+4. Connect to the QEMU instance.
+
+```sh
+target remote localhost:1234
+```
+
+5. Load the image.
+
+```sh
+load
+```
+
+6. Show ASM.
+
+```sh
+layout asm
+```
+
+7. Go ahead.
+
+```sh
+si # Step
 ```
