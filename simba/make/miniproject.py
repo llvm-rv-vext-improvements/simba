@@ -55,7 +55,7 @@ _start:
     sll sp, sp, STKSHIFT
     add sp, sp, tp
 
-    li t0, 0x2000
+    li t0, 0x2200 // FS and VC bits
     csrs mstatus, t0
 
     call main

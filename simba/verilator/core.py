@@ -22,7 +22,6 @@ class Verilator:
         command = [
             str(self.__executable_path),
             "--no-diff",
-            "--max-instr=1000",
             "-i",
             str(executable),
         ]
