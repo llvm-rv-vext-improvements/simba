@@ -30,6 +30,11 @@ SECTIONS {
     .bss : {
         *(.bss)
     }
+
+    /* stack && TLS, 128KB each */
+    _stack_top = ALIGN(0x1000);
+    . = _stack_top + 0x40000;
+    _stack_pointer = .;
 }
 """
 
@@ -44,7 +49,14 @@ TRAMPOLINE = """
 
 .global _start
 _start:
-    li sp, 0x80001000
+    #define STKSHIFT 17  // 128KB for each stack && TLS
+    la tp, _stack_top
+    add sp, zero, 1
+    sll sp, sp, STKSHIFT
+    add sp, sp, tp
+
+    li t0, 0x2000
+    csrs mstatus, t0
 
     call main
 
