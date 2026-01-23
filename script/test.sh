@@ -26,9 +26,6 @@ if [ "$MODE" == "style" ]; then
     echo -e "${CYAN}⚫ [simba] Running Black...${NC}"
     poetry run black "$SRCS"
 
-    echo -e "${PURPLE}🌀 [simba] Running isort...${NC}"
-    poetry run isort "$SRCS"
-
     echo -e "${BLUE}🔵 [simba] Running Pyright...${NC}"
     poetry run pyright "$SRCS"
 

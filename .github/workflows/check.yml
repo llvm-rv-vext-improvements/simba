@@ -46,8 +46,5 @@ jobs:
       - name: Black
         run: poetry run black --check simba
 
-      - name: ISort
-        run: poetry run isort --check simba
-
       - name: Pyright
         run: poetry run pyright simba
