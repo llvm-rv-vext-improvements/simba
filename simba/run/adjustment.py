@@ -77,7 +77,7 @@ def adjust_reports(reports: List[Report]) -> List[Report]:
     nop_reports = nop_by_toolchain(reports)
 
     adjusted = []
-    for report in reports:
+    for report in filter(is_not_nop, reports):
         if report.toolchain is not None and report.toolchain in nop_reports:
             nop = nop_reports[report.toolchain]
             adjusted.append(adjust_report(report, nop))

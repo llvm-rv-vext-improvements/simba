@@ -60,8 +60,6 @@ def reports_to_table(reports: List[Report]) -> Iterable[BenchmarkRow]:
 
 def table_to_diff(table: Iterable[BenchmarkRow]) -> Iterable[DiffBenchmarkRow]:
     def div(a, b):
-        if a == b:
-            return 1
         if b == 0:
             return 0
         return a / b
