@@ -57,6 +57,13 @@ def reports_to_table(reports: List[Report]) -> Iterable[BenchmarkRow]:
 
 
 def table_to_diff(table: Iterable[BenchmarkRow]) -> Iterable[DiffBenchmarkRow]:
+    def div(a, b):
+        if a == b:
+            return 1
+        if b == 0:
+            return 0
+        return a / b
+
     for row in table:
         b = row.measurements[0]
         yield DiffBenchmarkRow(
@@ -67,10 +74,10 @@ def table_to_diff(table: Iterable[BenchmarkRow]) -> Iterable[DiffBenchmarkRow]:
                     toolchain=m.toolchain,
                     instrs=m.instrs,
                     instrs_diff_abs=m.instrs - b.instrs,
-                    instrs_diff_rel=(m.instrs - b.instrs) / b.instrs,
+                    instrs_diff_rel=div(m.instrs - b.instrs, b.instrs),
                     cycles=m.cycles,
                     cycles_diff_abs=m.cycles - b.cycles,
-                    cycles_diff_rel=(m.cycles - b.cycles) / b.cycles,
+                    cycles_diff_rel=div(m.cycles - b.cycles, b.cycles),
                 )
                 for m in row.measurements[1:]
             ],
