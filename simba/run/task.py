@@ -40,4 +40,5 @@ def execute_task(task: Task) -> Report:
             instrunctions_count=instrs,
             cycles_count=cycles,
             simulation_time=timer.duration,
+            is_customly_trampolined=p.is_trampoline_present,
         )

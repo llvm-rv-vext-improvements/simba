@@ -22,7 +22,7 @@ def generate_nop_file() -> Path:
     nop_file = nop_dir / "nop.c"
     nop_content = "void main() {}\n"
 
-    with open(nop_file, "w") as f:
+    with open(nop_file, "w", encoding="utf-8") as f:
         f.write(nop_content)
 
     return nop_file
@@ -60,12 +60,16 @@ def nop_by_toolchain(reports: List[Report]) -> dict[Toolchain, Report]:
 def adjust_report(report: Report, nop: Report) -> Report:
     assert report.toolchain == nop.toolchain
 
+    if report.is_customly_trampolined:
+        return report
+
     return Report(
         name=report.name,
         toolchain=report.toolchain,
         instrunctions_count=report.instrunctions_count - nop.instrunctions_count,
         cycles_count=report.cycles_count - nop.cycles_count,
         simulation_time=report.simulation_time,
+        is_customly_trampolined=report.is_customly_trampolined,
     )
 
 

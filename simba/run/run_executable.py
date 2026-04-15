@@ -15,4 +15,5 @@ def run_executable(verilator: Verilator, args: RunExecutableArgs) -> Report:
         instrunctions_count=instrs,
         cycles_count=cycles,
         simulation_time=timer.duration,
+        is_customly_trampolined=True,
     )

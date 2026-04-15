@@ -8,6 +8,7 @@ class Measurement(NamedTuple):
     toolchain: Toolchain
     instrs: int
     cycles: int
+    is_customly_trampolined: bool
 
 
 class BenchmarkRow(NamedTuple):
@@ -50,6 +51,7 @@ def reports_to_table(reports: List[Report]) -> Iterable[BenchmarkRow]:
                     toolchain=unwrap(report.toolchain, "toolchain"),
                     instrs=report.instrunctions_count,
                     cycles=report.cycles_count,
+                    is_customly_trampolined=report.is_customly_trampolined,
                 )
                 for report in enemies
             ],
@@ -93,7 +95,7 @@ def table_to_csv(table: Iterable[DiffBenchmarkRow]) -> str:
     header_parts = ["Name"]
 
     # Base column
-    header_parts.extend(["Conf0", "Instrs0", "Cycles0"])
+    header_parts.extend(["Conf0", "Instrs0", "Cycles0", "IsTrampolined0"])
 
     # Diff columns
     max_diffs = max((len(row.diffs) for row in table), default=0)
@@ -118,7 +120,12 @@ def table_to_csv(table: Iterable[DiffBenchmarkRow]) -> str:
 
         # Base measurement
         data_parts.extend(
-            [repr(row.base.toolchain), str(row.base.instrs), str(row.base.cycles)]
+            [
+                repr(row.base.toolchain),
+                str(row.base.instrs),
+                str(row.base.cycles),
+                str(row.base.is_customly_trampolined),
+            ]
         )
 
         # Diff measurements
