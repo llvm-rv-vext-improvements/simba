@@ -12,6 +12,7 @@ from simba.args.argv import (
 )
 from simba.convert.json import reports_to_json
 from simba.log import loggy
+from simba.run.adjustment import adjust_reports, plan_nop
 from simba.run.plan_miniproject import plan_miniproject
 from simba.run.plan_sources import plan_sources
 from simba.run.plan_suite import plan_suite
@@ -27,6 +28,8 @@ def plan(args: Args) -> Plan:
 
     if isinstance(args.action, RunExecutableArgs):
         raise NotImplementedError
+
+    yield from plan_nop(verilator, args.common.toolchains)
 
     if isinstance(args.action, RunSourcesArgs):
         yield from plan_sources(verilator, TArgs(args.common, args.action))
@@ -59,6 +62,8 @@ def main(args: Args):
 
         for report in execute(tasks):
             reports.append(report)
+
+        reports = adjust_reports(reports)
 
     loggy.info("Total %ss real time spent", round(timer.duration.total_seconds()))
 
