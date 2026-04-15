@@ -50,8 +50,10 @@ simba run suite my/test/suite > /tmp/bench.json
 {
   "verilator_path": "/home/xxx/emu",
   "toolchain_base": {
-    "path": "/usr/lib/llvm-18",
-    "cflags": "--target=riscv64 -march=rv64gc -mcmodel=medany"
+    "path": "/nix/store/xxxx-riscv64-unknown-linux-gnu-clang-wrapper-21.1.2",
+    "cc": "riscv64-unknown-linux-gnu-clang",
+    "ld": "riscv64-unknown-linux-gnu-ld",
+    "cflags": "--target=riscv64-unknown-linux-gnu -fstack-protector -march=rv64gc -mcmodel=medany"
   },
   "toolchain_extra": [
     { "cflags": "-O0" },
