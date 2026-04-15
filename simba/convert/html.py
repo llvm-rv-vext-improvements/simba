@@ -231,7 +231,9 @@ def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
             html_parts.append("".join(row_parts))
 
         html_parts.append("</tbody></table>")
-        html_parts.append("<p><em>Note: Italicized benchmark names indicate custom trampoline configuration.</em></p>")
+        html_parts.append(
+            "<p><em>Note: Italicized benchmark names indicate custom trampoline configuration.</em></p>"
+        )
 
     html_parts.append(f"<script>{js}</script>")
     html_parts.append("</body></html>")
