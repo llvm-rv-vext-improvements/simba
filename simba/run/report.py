@@ -52,6 +52,8 @@ class RawReport(BaseModel):
         if pure.toolchain:
             raw_toolchain = RawToolchain(
                 path=str(pure.toolchain.path),
+                cc=pure.toolchain.cc,
+                ld=pure.toolchain.ld,
                 cflags=pure.toolchain.cflags,
             )
 
