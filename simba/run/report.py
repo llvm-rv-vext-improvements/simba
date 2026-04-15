@@ -26,6 +26,10 @@ class RawReport(BaseModel):
             raise ValueError("RawReport: toolchain should be set")
         if self.toolchain.path is None:
             raise ValueError("RawReport: toolchain.path should be set")
+        if self.toolchain.cc is None:
+            raise ValueError("RawReport: toolchain.cc should be set")
+        if self.toolchain.ld is None:
+            raise ValueError("RawReport: toolchain.ld should be set")
         if self.toolchain.cflags is None:
             raise ValueError("RawReport: toolchain.cflags should be set")
 
@@ -33,6 +37,8 @@ class RawReport(BaseModel):
             name=self.name,
             toolchain=Toolchain(
                 path=Path(self.toolchain.path),
+                cc=self.toolchain.cc,
+                ld=self.toolchain.ld,
                 cflags=self.toolchain.cflags,
             ),
             instrunctions_count=self.instrunctions_count,

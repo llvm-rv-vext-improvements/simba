@@ -6,24 +6,30 @@ from pydantic import BaseModel
 
 class RawToolchain(BaseModel):
     path: str | None = None
+    cc: str | None = None
+    ld: str | None = None
     cflags: str | None = None
 
     def __or__(self, that: "RawToolchain") -> "RawToolchain":
-        def coaelse(lhs, rhs):
+        def coalesce(lhs, rhs):
             return lhs if lhs is not None else rhs
 
         return RawToolchain(
-            path=coaelse(self.path, that.path),
-            cflags=coaelse(self.cflags, "") + " " + coaelse(that.cflags, ""),
+            path=coalesce(self.path, that.path),
+            cc=coalesce(self.cc, that.cc),
+            ld=coalesce(self.ld, that.ld),
+            cflags=coalesce(self.cflags, "") + " " + coalesce(that.cflags, ""),
         )
 
 
 class Toolchain(NamedTuple):
     path: Path
+    cc: str
+    ld: str
     cflags: str
 
     def __repr__(self) -> str:
-        return f"path '{str(self.path)}' cflags '{self.cflags}'"
+        return f"path '{str(self.path)}' cc '{self.cc}' ld '{self.ld}' cflags '{self.cflags}'"
 
     @classmethod
     def from_raw(cls, raw: RawToolchain) -> "Toolchain":
@@ -35,6 +41,8 @@ class Toolchain(NamedTuple):
 
         return Toolchain(
             path=Path(unwrap(raw.path, "path")),
+            cc=unwrap(raw.cc, "cc"),
+            ld=unwrap(raw.ld, "ld"),
             cflags=unwrap(raw.cflags, "cflags"),
         )
 
