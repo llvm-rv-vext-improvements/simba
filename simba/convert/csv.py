@@ -8,6 +8,7 @@ class Measurement(NamedTuple):
     toolchain: Toolchain
     instrs: int
     cycles: int
+    is_customly_trampolined: bool
 
 
 class BenchmarkRow(NamedTuple):
@@ -50,6 +51,7 @@ def reports_to_table(reports: List[Report]) -> Iterable[BenchmarkRow]:
                     toolchain=unwrap(report.toolchain, "toolchain"),
                     instrs=report.instrunctions_count,
                     cycles=report.cycles_count,
+                    is_customly_trampolined=report.is_customly_trampolined,
                 )
                 for report in enemies
             ],
@@ -57,6 +59,11 @@ def reports_to_table(reports: List[Report]) -> Iterable[BenchmarkRow]:
 
 
 def table_to_diff(table: Iterable[BenchmarkRow]) -> Iterable[DiffBenchmarkRow]:
+    def div(a, b):
+        if b == 0:
+            return 0
+        return a / b
+
     for row in table:
         b = row.measurements[0]
         yield DiffBenchmarkRow(
@@ -67,10 +74,10 @@ def table_to_diff(table: Iterable[BenchmarkRow]) -> Iterable[DiffBenchmarkRow]:
                     toolchain=m.toolchain,
                     instrs=m.instrs,
                     instrs_diff_abs=m.instrs - b.instrs,
-                    instrs_diff_rel=(m.instrs - b.instrs) / b.instrs,
+                    instrs_diff_rel=div(m.instrs - b.instrs, b.instrs),
                     cycles=m.cycles,
                     cycles_diff_abs=m.cycles - b.cycles,
-                    cycles_diff_rel=(m.cycles - b.cycles) / b.cycles,
+                    cycles_diff_rel=div(m.cycles - b.cycles, b.cycles),
                 )
                 for m in row.measurements[1:]
             ],
@@ -86,7 +93,7 @@ def table_to_csv(table: Iterable[DiffBenchmarkRow]) -> str:
     header_parts = ["Name"]
 
     # Base column
-    header_parts.extend(["Conf0", "Instrs0", "Cycles0"])
+    header_parts.extend(["Conf0", "Instrs0", "Cycles0", "IsTrampolined0"])
 
     # Diff columns
     max_diffs = max((len(row.diffs) for row in table), default=0)
@@ -111,7 +118,12 @@ def table_to_csv(table: Iterable[DiffBenchmarkRow]) -> str:
 
         # Base measurement
         data_parts.extend(
-            [repr(row.base.toolchain), str(row.base.instrs), str(row.base.cycles)]
+            [
+                repr(row.base.toolchain),
+                str(row.base.instrs),
+                str(row.base.cycles),
+                str(row.base.is_customly_trampolined),
+            ]
         )
 
         # Diff measurements

@@ -77,6 +77,7 @@ class MiniProject:
         self.__name = name or self.__sources[0].stem
         self.__build_dir = Path(".")
         self.__is_cleaning = is_cleaning
+        self.__is_trampoline_present = self.__is_trampoline_present_now()
 
     def __enter__(self) -> "MiniProject":
         self.__build_dir = Path(tempfile.mkdtemp())
@@ -140,7 +141,10 @@ class MiniProject:
         return self.__toolchain
 
     @property
-    def __is_trampoline_present(self) -> bool:
+    def is_trampoline_present(self) -> bool:
+        return self.__is_trampoline_present
+
+    def __is_trampoline_present_now(self) -> bool:
         for source in self.__sources:
             if source.suffix != ".S":
                 continue

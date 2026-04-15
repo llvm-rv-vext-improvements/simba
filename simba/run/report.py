@@ -13,6 +13,7 @@ class Report(NamedTuple):
     instrunctions_count: int
     cycles_count: int
     simulation_time: timedelta
+    is_customly_trampolined: bool
 
 
 class RawReport(BaseModel):
@@ -20,6 +21,7 @@ class RawReport(BaseModel):
     toolchain: RawToolchain | None = None
     instrunctions_count: int
     cycles_count: int
+    is_customly_trampolined: bool = False
 
     def to_pure(self) -> Report:
         if self.toolchain is None:
@@ -44,6 +46,7 @@ class RawReport(BaseModel):
             instrunctions_count=self.instrunctions_count,
             cycles_count=self.cycles_count,
             simulation_time=timedelta(0),
+            is_customly_trampolined=self.is_customly_trampolined,
         )
 
     @classmethod
@@ -52,6 +55,8 @@ class RawReport(BaseModel):
         if pure.toolchain:
             raw_toolchain = RawToolchain(
                 path=str(pure.toolchain.path),
+                cc=pure.toolchain.cc,
+                ld=pure.toolchain.ld,
                 cflags=pure.toolchain.cflags,
             )
 
@@ -60,4 +65,5 @@ class RawReport(BaseModel):
             toolchain=raw_toolchain,
             instrunctions_count=pure.instrunctions_count,
             cycles_count=pure.cycles_count,
+            is_customly_trampolined=pure.is_customly_trampolined,
         )

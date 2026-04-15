@@ -189,7 +189,10 @@ def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
 
         for row in table:
             row_parts = ["<tr>"]
-            row_parts.append(f"<td>{html.escape(row.name)}</td>")
+            if row.base.is_customly_trampolined:
+                row_parts.append(f"<td><i>{html.escape(row.name)}</i></td>")
+            else:
+                row_parts.append(f"<td>{html.escape(row.name)}</td>")
 
             base_conf_letter = toolchain_map.get(row.base.toolchain, "?")
             row_parts.append(
@@ -228,6 +231,9 @@ def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
             html_parts.append("".join(row_parts))
 
         html_parts.append("</tbody></table>")
+        html_parts.append(
+            "<p><em>Note: Italicized benchmark names indicate custom trampoline configuration.</em></p>"
+        )
 
     html_parts.append(f"<script>{js}</script>")
     html_parts.append("</body></html>")
