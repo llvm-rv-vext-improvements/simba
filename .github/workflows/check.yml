@@ -52,10 +52,10 @@ jobs:
       - name: Install Simba and Fakelator
         run: pipx install dist/simba-0.1.0-py3-none-any.whl --force
 
-      - name: Install LLVM
+      - name: Install LLVM and RISC-V sysroot
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y clang lld
+          sudo apt-get install -y clang lld gcc-riscv64-linux-gnu
 
       - name: Fakelator Integration Test
         run: ./fakelator/test.sh

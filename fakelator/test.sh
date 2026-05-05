@@ -5,6 +5,11 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK_DIR=$(mktemp -d)
 trap 'rm -rf "$WORK_DIR"' EXIT
 
+SYSROOT_FLAG=""
+if RISCV_SYSROOT=$(riscv64-linux-gnu-gcc -print-sysroot 2>/dev/null); then
+    SYSROOT_FLAG="--sysroot=${RISCV_SYSROOT}"
+fi
+
 TOOLCHAIN_PATH="$WORK_DIR/toolchain"
 mkdir -p "$TOOLCHAIN_PATH/bin"
 ln -sf "$(which clang)"   "$TOOLCHAIN_PATH/bin/clang"
@@ -23,7 +28,7 @@ cat > "$WORK_DIR/.simba.json" << EOF
     "path": "${TOOLCHAIN_PATH}",
     "cc": "clang",
     "ld": "ld.lld",
-    "cflags": "--target=riscv64-unknown-linux-gnu -march=rv64gc -mcmodel=medany -fstack-protector"
+    "cflags": "--target=riscv64-unknown-linux-gnu -march=rv64gc -mcmodel=medany -fstack-protector ${SYSROOT_FLAG}"
   },
   "toolchain_extra": [
     { "cflags": "-O0" },
