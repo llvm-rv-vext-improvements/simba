@@ -25,9 +25,6 @@ class RawInputDataConfig(BaseModel):
     test_matrix: List[RawTestCase] | None = None
 
     # --- TODO validation ----
-    def validate_vars():
-        pass
-
     def validate_func_name():
         pass
     # ========================
@@ -105,6 +102,16 @@ class InputDataConfig(NamedTuple):
     inputs: List[Input] | None
     test_matrix: List[TestCase] | None
 
+    def validate_var_inputs(self) -> None:
+        input_names = { elem.name for elem in (self.inputs or []) }
+        unexpected_inputs = set()
+        for test_case in self.test_matrix or []:
+            unexpected_inputs.update(set(var.input_name for var in test_case.vars).difference(input_names))
+        
+        if len(unexpected_inputs) != 0:
+            vars_with_unexpected_inputs = { var.name for test_case in self.test_matrix for var in test_case.vars if var.input_name in unexpected_inputs }
+            raise ValueError(f"Not declared inputs: {unexpected_inputs} used by vars: {vars_with_unexpected_inputs}")
+
     @classmethod
     def from_raw(cls, raw: RawInputDataConfig) -> "InputDataConfig":
         inputs = []
@@ -115,11 +122,14 @@ class InputDataConfig(NamedTuple):
             )
         
         for dir_input in raw.input_dirs or []:
-            inputs.append(
+            inputs.extend(
                 Input.from_raw_dir(dir_input)
             )
 
-        return InputDataConfig(
+        config = InputDataConfig(
             inputs=None if len(inputs) == 0 else inputs,
             test_matrix= None if raw.test_matrix is None else list(map(TestCase.from_raw, raw.test_matrix))
         )
+
+        config.validate_var_inputs()
+        return config
