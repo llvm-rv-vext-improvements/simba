@@ -1,16 +1,16 @@
 from pathlib import Path
 from typing import List, NamedTuple
 
-from pydantic import BaseModel, FilePath, DirectoryPath
+from pydantic import BaseModel, FilePath, DirectoryPath, ValidationError
 
 
 class RawVar(BaseModel):
-    var_name: str
+    name: str
     input_name: str
 
 class RawInputFile(BaseModel):
     name: str
-    input_file: FilePath # TODO add validation for ".h" files
+    input_file: FilePath # TODO add validation for ".h" extension
 
 class RawInputsDir(BaseModel):
     inputs_dir: DirectoryPath
@@ -22,23 +22,45 @@ class RawTestCase(BaseModel):
 class RawInputDataConfig(BaseModel):
     input_files: List[RawInputFile] | None = None
     input_dirs: List[RawInputsDir] | None = None
-    testMatrix: List[RawTestCase] | None = None
+    test_matrix: List[RawTestCase] | None = None
 
-    # TODO validation
+    # --- TODO validation ----
     def validate_vars():
         pass
 
     def validate_func_name():
         pass
+    # ========================
+
+    @classmethod
+    def resolve_path(cls, *, path: Path | None = None) -> Path:
+        if path is not None:
+            return path
+        return Path("./.input.simba.json")
+
+    @classmethod
+    def read_json(cls, path: Path) -> "RawInputDataConfig":
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = f.read()
+                return cls.model_validate_json(data)
+        except ValidationError as e:
+            message = ", ".join(
+                [f'{err["loc"][0]} {err["type"]}' for err in e.errors()]
+            )
+            raise ValueError(f"failed to parse config: {message}") from e
+        except Exception as e:
+            raise RuntimeError(f"failed to read config: {e}") from e
+
 
 class Var(NamedTuple):
-    var_name: str
+    name: str
     input_name: str
 
     @classmethod
     def from_raw(cls, raw: RawVar) -> "Var":
         return Var(
-            var_name=raw.var_name,
+            name=raw.name,
             input_name=raw.input_name
         )
 
@@ -66,6 +88,7 @@ class Input(NamedTuple):
                         ),
                     )
                 )
+        return inputs
 
 class TestCase(NamedTuple):
     vars: List[Var]
@@ -74,13 +97,13 @@ class TestCase(NamedTuple):
     @classmethod
     def from_raw(cls, raw: RawTestCase) -> "TestCase":
         return TestCase(
-            vars=list(map(raw.vars, Var.from_raw)),
+            vars=list(map(Var.from_raw, raw.vars)),
             function_name=raw.function_name
         )
 
 class InputDataConfig(NamedTuple):
     inputs: List[Input] | None
-    testMatrix: List[TestCase] | None
+    test_matrix: List[TestCase] | None
 
     @classmethod
     def from_raw(cls, raw: RawInputDataConfig) -> "InputDataConfig":
@@ -98,5 +121,5 @@ class InputDataConfig(NamedTuple):
 
         return InputDataConfig(
             inputs=None if len(inputs) == 0 else inputs,
-            testMatrix= None if raw.testMatrix is None else list(map(raw.testMatrix, TestCase.from_raw))
+            test_matrix= None if raw.test_matrix is None else list(map(TestCase.from_raw, raw.test_matrix))
         )
