@@ -48,3 +48,14 @@ jobs:
 
       - name: Pyright
         run: poetry run pyright simba
+
+      - name: Install Simba and Fakelator
+        run: pipx install dist/simba-0.1.0-py3-none-any.whl --force
+
+      - name: Install LLVM
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y clang lld
+
+      - name: Fakelator integration test
+        run: ./fakelator/test.sh

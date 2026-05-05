@@ -36,7 +36,7 @@ class Verilator:
 
             if p.returncode != 0:
                 raise RuntimeError(
-                    f"{' '.join(command)} returned {p.returncode}: {p.stderr}",
+                    f"{' '.join(command)} returned {p.returncode}: {stderr}",
                 )
 
         return VerilatorLog(
