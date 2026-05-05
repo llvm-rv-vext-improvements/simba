@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, List, NamedTuple
 
 from simba.args.common import CommonArgs, RawCommonArgs
+from simba.args.input_data import RawInputDataConfig, InputDataConfig
 
 
 class RunKind(Enum):
@@ -60,6 +61,7 @@ class Args(NamedTuple):
         | RunSuiteArgs
         | ConvertArgs
     )
+    inputConfig: InputDataConfig | None = None
 
     @classmethod
     def from_argv(cls) -> "Args":
@@ -87,6 +89,12 @@ class Args(NamedTuple):
             "paths",
             nargs="+",
             help="Paths to source files or directories",
+        )
+        run_parser.add_argument(
+            "--input-config-path",
+            default=None,
+            required=False,
+            help="Path to input config file for tests"
         )
 
         convert_parser = subparsers.add_parser(
@@ -119,9 +127,14 @@ class Args(NamedTuple):
             else:
                 raise ValueError(f"unexpected run kind '{args.kind}'")
 
+            input_config = InputDataConfig.from_raw(
+                RawInputDataConfig.read_json(RawInputDataConfig.resolve_path(path=args.input_config_path))
+            )
+
             return Args(
                 common=common,
                 action=run,
+                inputConfig=input_config
             )
 
         if args.command == "convert":
