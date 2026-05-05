@@ -1,5 +1,4 @@
 from datetime import timedelta
-from pathlib import Path
 from typing import NamedTuple
 
 from pydantic import BaseModel
@@ -24,25 +23,9 @@ class RawReport(BaseModel):
     is_customly_trampolined: bool = False
 
     def to_pure(self) -> Report:
-        if self.toolchain is None:
-            raise ValueError("RawReport: toolchain should be set")
-        if self.toolchain.path is None:
-            raise ValueError("RawReport: toolchain.path should be set")
-        if self.toolchain.cc is None:
-            raise ValueError("RawReport: toolchain.cc should be set")
-        if self.toolchain.ld is None:
-            raise ValueError("RawReport: toolchain.ld should be set")
-        if self.toolchain.cflags is None:
-            raise ValueError("RawReport: toolchain.cflags should be set")
-
         return Report(
             name=self.name,
-            toolchain=Toolchain(
-                path=Path(self.toolchain.path),
-                cc=self.toolchain.cc,
-                ld=self.toolchain.ld,
-                cflags=self.toolchain.cflags,
-            ),
+            toolchain=Toolchain.from_raw(self.toolchain) if self.toolchain else None,
             instrunctions_count=self.instrunctions_count,
             cycles_count=self.cycles_count,
             simulation_time=timedelta(0),

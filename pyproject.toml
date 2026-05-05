@@ -8,8 +8,15 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = ["pydantic (>=2.12.5,<3.0.0)"]
 
+[tool.poetry]
+packages = [
+    { include = "simba" },
+    { include = "fakelator" },
+]
+
 [tool.poetry.scripts]
 simba = "simba.main:main"
+fakelator = "fakelator.main:main"
 
 [tool.pylint]
 disable = [
