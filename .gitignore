@@ -1,5 +1,6 @@
 # Domain
 .simba.json
+.input.simba.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
