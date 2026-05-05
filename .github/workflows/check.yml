@@ -57,5 +57,5 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y clang lld
 
-      - name: Fakelator integration test
+      - name: Fakelator Integration Test
         run: ./fakelator/test.sh
