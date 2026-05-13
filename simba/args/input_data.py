@@ -102,7 +102,8 @@ class TestCase(NamedTuple):
     def from_raw(cls, raw: RawTestCase) -> "TestCase":
         return TestCase(
             vars=list(map(Var.from_raw, raw.vars)),
-            function_name=raw.function_name
+            function_name=raw.function_name,
+            function_return_type=raw.function_return_type,
         )
 
 class InputDataConfig(NamedTuple):
