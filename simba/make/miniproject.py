@@ -111,6 +111,7 @@ class MiniProject:
             bench = d / "main.c"
             benchcode = generate_program(
                 self.__input.function_name,
+                function_return_type=self.__input.function_return_type,
                 variables=[(var_.variable, var_.type_) for var_ in self.__input.vars],
                 input_filenames=[var_.input_path.name for var_ in self.__input.vars],                
             )
@@ -209,7 +210,7 @@ class MiniProject:
         def is_a(ext: str):
             return source.suffix == ext
 
-        if is_a(".c") or is_a(".ll") or is_a(".S"):
+        if is_a(".c") or is_a(".ll") or is_a(".S") or is_a(".h"):
             return f"$(CC) $(CFLAGS) -c {source} -o {source.stem}.o"
         raise ValueError(
             f"do not known how to compile {source}, .c/.ll/.S was expected"

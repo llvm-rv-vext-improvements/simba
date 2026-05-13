@@ -19,6 +19,7 @@ class RawInputsDir(BaseModel):
 class RawTestCase(BaseModel):
     vars: List[RawVar]
     function_name: str
+    function_return_type: str
 
 class RawInputDataConfig(BaseModel):
     input_files: List[RawInputFile] | None = None
@@ -95,6 +96,7 @@ class Input(NamedTuple):
 class TestCase(NamedTuple):
     vars: List[Var]
     function_name: str  # TODO make validation that function exists in test case in actual code (Not here)
+    function_return_type: str
  
     @classmethod
     def from_raw(cls, raw: RawTestCase) -> "TestCase":
@@ -151,6 +153,7 @@ class TestVar(NamedTuple):
 
 class TestInput(NamedTuple):
     function_name: str
+    function_return_type: str
     vars: List[TestVar]
 
 type TestInputs = List[TestInput]
@@ -162,7 +165,13 @@ def test_inputs(config: InputDataConfig) -> TestInputs:
     test_inputs = []
     for test_case in config.test_matrix:    
         if config.inputs is None:
-            test_inputs.append(TestInput(function_name=test_case.function_name, vars=[]))
+            test_inputs.append(
+                TestInput(
+                    function_name=test_case.function_name,
+                    function_return_type=test_case.function_return_type,
+                    vars=[]
+                )
+            )
             continue
     
         new_vars = []
@@ -172,6 +181,12 @@ def test_inputs(config: InputDataConfig) -> TestInputs:
                     new_vars.append(
                         TestVar(var.name, var.type_, input_.input_file)
                     )
-        test_inputs.append(TestInput(function_name=test_case.function_name, vars=new_vars))
+        test_inputs.append(
+            TestInput(
+                function_name=test_case.function_name,
+                function_return_type=test_case.function_return_type,
+                vars=new_vars
+            )
+        )
     
     return test_inputs
