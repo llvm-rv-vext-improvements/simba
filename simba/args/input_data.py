@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Optional
 
 from pydantic import BaseModel, FilePath, DirectoryPath, ValidationError, Field
 
@@ -37,7 +37,7 @@ class RawInputDataConfig(BaseModel):
         return Path("./.input.simba.json")
 
     @classmethod
-    def read_json(cls, path: Path) -> "RawInputDataConfig" | None:
+    def read_json(cls, path: Path) -> Optional["RawInputDataConfig"]:
         try:
             if not path.exists():
                 return None
@@ -118,7 +118,7 @@ class InputDataConfig(NamedTuple):
             raise ValueError(f"Not declared inputs: {unexpected_inputs} used by vars: {vars_with_unexpected_inputs}")
 
     @classmethod
-    def from_raw(cls, raw: RawInputDataConfig | None) -> "InputDataConfig" | None:
+    def from_raw(cls, raw: RawInputDataConfig | None) -> Optional["InputDataConfig"]:
         if raw is None:
             return None
 
