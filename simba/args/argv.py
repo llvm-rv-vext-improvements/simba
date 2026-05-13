@@ -50,6 +50,7 @@ class ConvertArgs(NamedTuple):
 class TArgs[T](NamedTuple):
     common: CommonArgs
     run: T
+    input_config: InputDataConfig | None = None
 
 
 class Args(NamedTuple):
@@ -61,7 +62,7 @@ class Args(NamedTuple):
         | RunSuiteArgs
         | ConvertArgs
     )
-    inputConfig: InputDataConfig | None = None
+    input_config: InputDataConfig | None = None
 
     @classmethod
     def from_argv(cls) -> "Args":
@@ -134,7 +135,7 @@ class Args(NamedTuple):
             return Args(
                 common=common,
                 action=run,
-                inputConfig=input_config
+                input_config=input_config
             )
 
         if args.command == "convert":
