@@ -90,6 +90,9 @@ class MiniProject:
         d = self.__build_dir
         d.mkdir(exist_ok=True)
 
+        if self.__input is not None:
+            self.__sources.extend(set(var_.input_path for var_ in self.__input.vars))
+
         for src in self.__sources:
             dst = d / src.name
             shutil.copyfile(src, dst)
@@ -114,7 +117,6 @@ class MiniProject:
             with open(bench, "w", encoding="utf-8") as f:
                 f.write(benchcode)
             self.__sources.append(bench)
-            self.__sources.extend(var_.input_path for var_ in self.__input.vars)
 
         makefile = d / "Makefile"
         with open(makefile, "w", encoding="utf-8") as f:
