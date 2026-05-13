@@ -108,7 +108,7 @@ class MiniProject:
             bench = d / "main.c"
             benchcode = generate_program(
                 self.__input.function_name,
-                variables=[var_.variable for var_ in self.__input.vars],
+                variables=[(var_.variable, var_.type_) for var_ in self.__input.vars],
                 input_filenames=[var_.input_path.name for var_ in self.__input.vars],                
             )
             with open(bench, "w", encoding="utf-8") as f:

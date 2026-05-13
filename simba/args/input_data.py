@@ -6,6 +6,7 @@ from pydantic import BaseModel, FilePath, DirectoryPath, ValidationError
 
 class RawVar(BaseModel):
     name: str
+    type_: str
     input_name: str
 
 class RawInputFile(BaseModel):
@@ -52,13 +53,15 @@ class RawInputDataConfig(BaseModel):
 
 class Var(NamedTuple):
     name: str
+    type_: str
     input_name: str
 
     @classmethod
     def from_raw(cls, raw: RawVar) -> "Var":
         return Var(
             name=raw.name,
-            input_name=raw.input_name
+            input_name=raw.input_name,
+            type_=raw.type_,
         )
 
 class Input(NamedTuple):
@@ -138,6 +141,7 @@ class InputDataConfig(NamedTuple):
 
 class TestVar(NamedTuple):
     variable: str
+    type_: str
     input_path: FilePath
 
 class TestInput(NamedTuple):
@@ -161,7 +165,7 @@ def test_inputs(config: InputDataConfig) -> TestInputs:
             for input_ in config.inputs:
                 if var.input_name == input_.name:
                     new_vars.append(
-                        TestVar(var.name, input_.input_file)
+                        TestVar(var.name, var.type_, input_.input_file)
                     )
         test_inputs.append(TestInput(function_name=test_case.function_name, vars=new_vars))
     
