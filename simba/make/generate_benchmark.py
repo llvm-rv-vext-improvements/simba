@@ -5,10 +5,10 @@ template = (
     // extern function
     {}
     // ==========
-    int main() {
+    int main() {{
         // loop
         {}
-    }
+    }}
     """
 )
 
@@ -16,20 +16,20 @@ template = (
 warmup_loop = (
     """
         // Warmup iterations
-        for (int i = 0; i < {}; i++) {
+        for (int i = 0; i < {}; i++) {{
             // Function call
             {}
-        }
+        }}
     """
 )
 
 bench_loop = (
     """
         // Bench iterations
-        for (int i = 0; i < {}; i++) {
+        for (int i = 0; i < {}; i++) {{
             // Function call
             {}
-        }
+        }}
     """
 )
 
