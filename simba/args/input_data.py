@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Iterator
 
 from pydantic import BaseModel, FilePath, DirectoryPath, ValidationError
 
@@ -133,3 +133,36 @@ class InputDataConfig(NamedTuple):
 
         config.validate_var_inputs()
         return config
+
+# ====================
+
+class TestVar(NamedTuple):
+    variable: str
+    input_path: FilePath
+
+class TestInput(NamedTuple):
+    function_name: str
+    vars: List[TestVar]
+
+type TestInputs = List[TestInput]
+
+def test_inputs(config: InputDataConfig) -> TestInputs:
+    if config.test_matrix is None:
+        return []
+
+    test_inputs = []
+    for test_case in config.test_matrix:    
+        if config.inputs is None:
+            test_inputs.append(TestInput(function_name=test_case.function_name, vars=[]))
+            continue
+    
+        new_vars = []
+        for var in test_case.vars:
+            for input_ in config.inputs:
+                if var.input_name == input_.name:
+                    new_vars.append(
+                        TestVar(var.name, input_.input_file)
+                    )
+        test_inputs.append(TestInput(function_name=test_case.function_name, vars=new_vars))
+    
+    return test_inputs
