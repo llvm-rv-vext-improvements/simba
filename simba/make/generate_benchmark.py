@@ -2,6 +2,8 @@
 template = (
     """//includes
     {}
+    // extern function
+    {}
     // ==========
     int main() {
         // loop
@@ -35,7 +37,10 @@ without_loop = "{} // Function call"
 
 include = '#include "{}"\n'
 
-function_call = "{}({})"
+function_call = "{}({});"
+
+extern_function = "extern {}({});"
+arg_template = "{} {}"
 
 def get_includes(input_filenames: list[str] | None = None) -> str:
     include_str = ""
@@ -49,6 +54,18 @@ def get_function_call(function_name: str, variables: list[str] | None) -> str:
     return function_call.format(
         function_name,
         ','.join(variables or [])
+    )
+
+def get_extern_function(function_name: str, variables: list[tuple[str, str]] | None) -> str:
+    args = []
+
+    for (var_, type_) in variables or []:
+        args.append(
+            arg_template.format(type_, var_)
+        )
+    return extern_function.format(
+        function_name,
+        ','.join(args)
     )
 
 def get_loops(
@@ -69,14 +86,15 @@ def get_loops(
 
 def generate_program(
     function_name: str,
-    variables: list[str] | None = None,
+    variables: list[tuple[str, str]] | None = None,
     input_filenames: list[str] | None = None,
     warmup_iterations: int | None = None,
     benchmark_iterations: int | None = None,
 ) -> str:
     includes = get_includes(input_filenames)
+    extern_func_str = get_extern_function(function_name, variables)
     function_call_str = get_function_call(
-        function_name, variables
+        function_name, [var_ for (var_, _) in variables]
     )
     loops = get_loops(
         function_call_str,
@@ -86,5 +104,6 @@ def generate_program(
 
     return template.format(
         includes,
-        loops
+        extern_func_str,
+        loops,
     )
