@@ -113,7 +113,7 @@ class MiniProject:
                 self.__input.function_name,
                 function_return_type=self.__input.function_return_type,
                 variables=[(var_.variable, var_.type_) for var_ in self.__input.vars],
-                input_filenames=[var_.input_path.name for var_ in self.__input.vars],                
+                input_filenames=list(set(var_.input_path.name for var_ in self.__input.vars)),                
             )
             with open(bench, "w", encoding="utf-8") as f:
                 f.write(benchcode)
