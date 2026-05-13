@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import List
 
 from simba.args.toolchain import Toolchain
+from simba.args.input_data import TestInput
+from simba.make.generate_benchmark import generate_program
 
 SCRIPT_LD = """
 MEMORY {
@@ -71,6 +73,7 @@ class MiniProject:
         sources: List[Path],
         name: str | None,
         is_cleaning: bool = True,
+        input_: TestInput | None = None,
     ) -> None:
         self.__toolchain = toolchain
         self.__sources = sources
@@ -78,6 +81,7 @@ class MiniProject:
         self.__build_dir = Path(".")
         self.__is_cleaning = is_cleaning
         self.__is_trampoline_present = self.__is_trampoline_present_now()
+        self.__input = input_
 
     def __enter__(self) -> "MiniProject":
         self.__build_dir = Path(tempfile.mkdtemp())
@@ -99,6 +103,18 @@ class MiniProject:
             with open(trampoline, "w", encoding="utf-8") as f:
                 f.write(TRAMPOLINE)
             self.__sources.append(trampoline)
+        
+        if self.__input is not None:
+            bench = d / "main.c"
+            benchcode = generate_program(
+                self.__input.function_name,
+                variables=[var_.variable for var_ in self.__input.vars],
+                input_filenames=[var_.input_path.name for var_ in self.__input.vars],                
+            )
+            with open(bench, "w", encoding="utf-8") as f:
+                f.write(benchcode)
+            self.__sources.append(bench)
+            self.__sources.extend(var_.input_path for var_ in self.__input.vars)
 
         makefile = d / "Makefile"
         with open(makefile, "w", encoding="utf-8") as f:
