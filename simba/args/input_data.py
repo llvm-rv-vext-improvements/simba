@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, NamedTuple, Optional
 from pydantic import BaseModel, FilePath, DirectoryPath, Field, field_validator
 
-from simba.args.utils import read_json
+from simba.args.parse_json import parse_json
 
 
 class RawVar(BaseModel):
@@ -49,7 +49,7 @@ class RawInputDataConfig(BaseModel):
     def read_json(cls, path: Path) -> Optional["RawInputDataConfig"]:
         if not path.exists():
             return None
-        return read_json(cls, path)
+        return parse_json(cls, path)
 
 
 class Var(NamedTuple):

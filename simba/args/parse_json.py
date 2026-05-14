@@ -6,7 +6,7 @@ from pydantic import ValidationError, FilePath, BaseModel
 M = TypeVar("M", bound=BaseModel)
 
 
-def read_json(cls: Type[M], path: FilePath) -> M:
+def parse_json(cls: Type[M], path: FilePath) -> M:
     try:
         with open(path, "r", encoding="utf-8") as f:
             data = f.read()
