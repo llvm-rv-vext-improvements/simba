@@ -158,7 +158,7 @@ class Args(NamedTuple):
     def __parse_run_sources(cls, args: Any) -> RunSourcesArgs:
         return RunSourcesArgs(
             paths=[Path(x) for x in args.paths],
-            input_data_config=cls.__get_input_config(args)
+            input_data_config=cls.__get_input_config(args),
         )
 
     @classmethod
@@ -169,8 +169,7 @@ class Args(NamedTuple):
             )
 
         return RunMiniprojectArgs(
-            path=Path(args.paths[0]),
-            input_data_config=cls.__get_input_config(args)
+            path=Path(args.paths[0]), input_data_config=cls.__get_input_config(args)
         )
 
     @classmethod
