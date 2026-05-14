@@ -86,11 +86,11 @@ class GenerationOptions:
     ):
         if variables is None:
             variables = []
-        
+
         if input_filenames is None:
             input_filenames = []
 
-        self.variables: list[str] = variables
+        self.variables: list[tuple[str, str]] = variables
         self.input_filenames: list[str] = input_filenames
         self.warmup_iterations: int | None = warmup_iterations
         self.main_iterations: int | None = main_iterations

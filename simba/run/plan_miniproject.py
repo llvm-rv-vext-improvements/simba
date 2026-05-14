@@ -19,7 +19,8 @@ def to_sources_args(args: TArgs[RunMiniprojectArgs]) -> TArgs[RunSourcesArgs]:
             break
 
     return TArgs(
-        common=args.common, run=RunSourcesArgs(paths=paths, input_data_config=input_config)
+        common=args.common,
+        run=RunSourcesArgs(paths=paths, input_data_config=input_config),
     )
 
 

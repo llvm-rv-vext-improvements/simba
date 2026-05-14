@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, NamedTuple, Optional
+from typing import List, NamedTuple
 from pydantic import BaseModel, FilePath, DirectoryPath, Field, field_validator
 
 from simba.args.parse_json import parse_json
@@ -179,7 +179,9 @@ def get_test_inputs(config: InputDataConfig | None) -> BencharkInputs:
         for var in test_case.vars:
             for input_ in config.inputs:
                 if var.input_name == input_.name:
-                    new_vars.append(BenchmarkVar(var.name, var.type_, input_.input_file))
+                    new_vars.append(
+                        BenchmarkVar(var.name, var.type_, input_.input_file)
+                    )
         test_inputs.append(
             BencharkInput(
                 function_name=test_case.function_name,
