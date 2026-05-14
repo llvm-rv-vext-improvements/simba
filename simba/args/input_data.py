@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import List, NamedTuple, Optional
+from pydantic import BaseModel, FilePath, DirectoryPath, Field, field_validator
 
-from pydantic import BaseModel, FilePath, DirectoryPath, ValidationError, Field, field_validator
+from simba.args.utils import read_json
 
 
 class RawVar(BaseModel):
@@ -21,7 +22,6 @@ class RawInputFile(BaseModel):
         if not v.endswith(".h"):
             raise ValueError("Input files should be .h files")
         return v
-
 
 
 class RawInputsDir(BaseModel):
@@ -47,19 +47,9 @@ class RawInputDataConfig(BaseModel):
 
     @classmethod
     def read_json(cls, path: Path) -> Optional["RawInputDataConfig"]:
-        try:
-            if not path.exists():
-                return None
-            with open(path, "r", encoding="utf-8") as f:
-                data = f.read()
-                return cls.model_validate_json(data)
-        except ValidationError as e:
-            message = ", ".join(
-                [f'{err["loc"][0]} {err["type"]}' for err in e.errors()]
-            )
-            raise ValueError(f"failed to parse config: {message}") from e
-        except Exception as e:
-            raise RuntimeError(f"failed to read config: {e}") from e
+        if not path.exists():
+            return None
+        return read_json(cls, path)
 
 
 class Var(NamedTuple):
@@ -131,7 +121,7 @@ class InputDataConfig(NamedTuple):
         if len(unexpected_inputs) != 0:
             vars_with_unexpected_inputs = {
                 var.name
-                for test_case in self.test_matrix
+                for test_case in self.test_matrix or []
                 for var in test_case.vars
                 if var.input_name in unexpected_inputs
             }
@@ -184,8 +174,8 @@ class TestInput(NamedTuple):
 type TestInputs = List[TestInput]
 
 
-def get_test_inputs(config: InputDataConfig) -> TestInputs:
-    if config.test_matrix is None:
+def get_test_inputs(config: InputDataConfig | None) -> TestInputs:
+    if config is None or config.test_matrix is None:
         return []
 
     test_inputs = []

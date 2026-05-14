@@ -2,6 +2,7 @@ from simba.args.argv import RunSourcesArgs, TArgs
 from simba.make.miniproject import MiniProject
 from simba.run.task import Plan, Task
 from simba.verilator.core import Verilator
+from simba.args.miniproject_config import MiniProjectConfig
 from simba.args.input_data import get_test_inputs
 
 
@@ -15,13 +16,14 @@ def plan_sources(
 
     for toolchain in args.common.toolchains:
         for input_ in get_test_inputs(args.input_config) or [None]:
+            config = MiniProjectConfig(
+                toolchain=toolchain,
+                sources=args.run.paths,
+                name=name,
+                is_cleaning=False,
+                input_=input_,
+            )
             yield Task(
                 verilator=verilator,
-                project=MiniProject(
-                    toolchain=toolchain,
-                    sources=args.run.paths,
-                    name=name,
-                    is_cleaning=False,
-                    input_=input_,
-                ),
+                project=MiniProject(config=config),
             )
