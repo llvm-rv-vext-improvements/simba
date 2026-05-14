@@ -8,7 +8,7 @@ from simba.args.input_data import InputDataConfig, RawInputDataConfig
 def to_sources_args(args: TArgs[RunMiniprojectArgs]) -> TArgs[RunSourcesArgs]:
     paths = [f.resolve() for f in args.run.path.iterdir()]
 
-    input_config = args.input_config
+    input_config = args.run.input_data_config
     for path_ in paths:
         if path_.name == ".input.simba.json":
             if input_config is None:

@@ -40,27 +40,21 @@ EXTERN_FUNCTION = "extern {} {}({});"
 ARG_TEMPLATE = "{} {}"
 
 
-def get_includes(input_filenames: list[str] | None = None) -> str:
-    include_str = ""
-
-    for file in input_filenames or []:
-        include_str += INCLUDE.format(file)
-
-    return include_str
+def get_includes(input_filenames: list[str]) -> str:
+    return "".join(INCLUDE.format(file) for file in input_filenames)
 
 
-def get_function_call(function_name: str, variables: list[str] | None) -> str:
-    return FUNCTION_CALL.format(function_name, ",".join(variables or []))
+def get_function_call(function_name: str, variables: list[str]) -> str:
+    return FUNCTION_CALL.format(function_name, ",".join(variables))
 
 
 def get_extern_function(
     function_name: str,
     function_return_type: str,
-    variables: list[tuple[str, str]] | None,
+    variables: list[tuple[str, str]],
 ) -> str:
     args = []
-
-    for var_, type_ in variables or []:
+    for var_, type_ in variables:
         args.append(ARG_TEMPLATE.format(type_, var_))
     return EXTERN_FUNCTION.format(function_return_type, function_name, ",".join(args))
 
@@ -85,15 +79,21 @@ class GenerationOptions:
 
     def __init__(
         self,
-        variables: list[tuple[str, str]] | None = None,
+        variables: list[tuple[str, str]] | None,
         input_filenames: list[str] | None = None,
         warmup_iterations: int | None = None,
         main_iterations: int | None = None,
     ):
-        self.variables = variables
-        self.input_filenames = input_filenames
-        self.warmup_iterations = warmup_iterations
-        self.main_iterations = main_iterations
+        if variables is None:
+            variables = []
+        
+        if input_filenames is None:
+            input_filenames = []
+
+        self.variables: list[str] = variables
+        self.input_filenames: list[str] = input_filenames
+        self.warmup_iterations: int | None = warmup_iterations
+        self.main_iterations: int | None = main_iterations
 
     def set_warmup_iterations(self, iterations: int) -> Self:
         self.warmup_iterations = iterations

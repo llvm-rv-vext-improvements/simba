@@ -33,10 +33,12 @@ class RunExecutableArgs(NamedTuple):
 
 class RunSourcesArgs(NamedTuple):
     paths: List[Path]
+    input_data_config: InputDataConfig | None
 
 
 class RunMiniprojectArgs(NamedTuple):
     path: Path
+    input_data_config: InputDataConfig | None
 
 
 class RunSuiteArgs(NamedTuple):
@@ -50,7 +52,6 @@ class ConvertArgs(NamedTuple):
 class TArgs[T](NamedTuple):
     common: CommonArgs
     run: T
-    input_config: InputDataConfig | None = None
 
 
 class Args(NamedTuple):
@@ -62,7 +63,6 @@ class Args(NamedTuple):
         | RunSuiteArgs
         | ConvertArgs
     )
-    input_config: InputDataConfig | None = None
 
     @classmethod
     def from_argv(cls) -> "Args":
@@ -128,13 +128,7 @@ class Args(NamedTuple):
             else:
                 raise ValueError(f"unexpected run kind '{args.kind}'")
 
-            input_config = InputDataConfig.from_raw(
-                RawInputDataConfig.read_json(
-                    RawInputDataConfig.resolve_path(path=args.input_config_path)
-                )
-            )
-
-            return Args(common=common, action=run, input_config=input_config)
+            return Args(common=common, action=run)
 
         if args.command == "convert":
             return Args(
@@ -164,6 +158,7 @@ class Args(NamedTuple):
     def __parse_run_sources(cls, args: Any) -> RunSourcesArgs:
         return RunSourcesArgs(
             paths=[Path(x) for x in args.paths],
+            input_data_config=cls.__get_input_config(args)
         )
 
     @classmethod
@@ -175,6 +170,7 @@ class Args(NamedTuple):
 
         return RunMiniprojectArgs(
             path=Path(args.paths[0]),
+            input_data_config=cls.__get_input_config(args)
         )
 
     @classmethod
@@ -186,4 +182,13 @@ class Args(NamedTuple):
 
         return RunSuiteArgs(
             path=Path(args.paths[0]),
+        )
+
+    @staticmethod
+    def __get_input_config(args: Any) -> InputDataConfig | None:
+        if args.input_config_path is None:
+            return None
+
+        return InputDataConfig.from_raw(
+            RawInputDataConfig.read_json(args.input_config_path)
         )

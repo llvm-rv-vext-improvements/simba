@@ -33,15 +33,15 @@ def plan(args: Args) -> Plan:
 
     if isinstance(args.action, RunSourcesArgs):
         yield from plan_sources(
-            verilator, TArgs(args.common, args.action, args.input_config)
+            verilator, TArgs(args.common, args.action)
         )
     elif isinstance(args.action, RunMiniprojectArgs):
         yield from plan_miniproject(
-            verilator, TArgs(args.common, args.action, args.input_config)
+            verilator, TArgs(args.common, args.action)
         )
     elif isinstance(args.action, RunSuiteArgs):
         yield from plan_suite(
-            verilator, TArgs(args.common, args.action, args.input_config)
+            verilator, TArgs(args.common, args.action)
         )
     else:
         raise RuntimeError(f"unexpected type: {type(args.action)}")
