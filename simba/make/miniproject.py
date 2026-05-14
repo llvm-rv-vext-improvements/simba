@@ -6,7 +6,7 @@ from pathlib import Path
 from simba.args.toolchain import Toolchain
 from simba.args.miniproject_config import MiniProjectConfig
 from simba.args.input_data import TestInput
-from simba.make.generate_benchmark import generate_program, GenerationOptions
+from simba.make.driver import generate_program, GenerationOptions
 
 SCRIPT_LD = """
 MEMORY {
