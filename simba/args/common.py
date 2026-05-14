@@ -4,7 +4,7 @@ from typing import List, NamedTuple
 from pydantic import BaseModel
 
 from simba.args.toolchain import RawToolchain, Toolchain, ToolchainMatrix
-from simba.args.utils import read_json
+from simba.args.parse_json import parse_json
 
 
 class RawCommonArgs(BaseModel):
@@ -19,7 +19,7 @@ class RawCommonArgs(BaseModel):
 
     @classmethod
     def read_json(cls, path: Path) -> "RawCommonArgs":
-        return read_json(cls, path)
+        return parse_json(cls, path)
 
 
 class CommonArgs(NamedTuple):
