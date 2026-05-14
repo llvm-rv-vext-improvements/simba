@@ -90,7 +90,9 @@ class MiniProject:
         d = self.__build_dir
         d.mkdir(exist_ok=True)
 
-        input_files_to_copy = list(set(var_.input_path for var_ in self.__input.vars))
+        input_files_to_copy = list(
+            set(var_.input_path for var_ in self.__input.vars)
+        ) if self.__input is not None else []
         for src in self.__sources + input_files_to_copy:
             dst = d / src.name
             shutil.copyfile(src, dst)
