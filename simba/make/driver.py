@@ -1,6 +1,6 @@
 from typing import Self, List
 
-from simba.args.input_data import TestVar
+from simba.args.input_data import BenchmarkVar
 
 TEMPLATE = """//includes
     {}
@@ -104,7 +104,7 @@ class GenerationOptions:
         return self
 
     @staticmethod
-    def from_variables(variables: List[TestVar]) -> "GenerationOptions":
+    def from_variables(variables: List[BenchmarkVar]) -> "GenerationOptions":
         new_vars = []
         new_input_files = set()
 
