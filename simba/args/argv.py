@@ -95,7 +95,7 @@ class Args(NamedTuple):
             "--input-config-path",
             default=None,
             required=False,
-            help="Path to input config file for tests"
+            help="Path to input config file for tests",
         )
 
         convert_parser = subparsers.add_parser(
@@ -129,14 +129,12 @@ class Args(NamedTuple):
                 raise ValueError(f"unexpected run kind '{args.kind}'")
 
             input_config = InputDataConfig.from_raw(
-                RawInputDataConfig.read_json(RawInputDataConfig.resolve_path(path=args.input_config_path))
+                RawInputDataConfig.read_json(
+                    RawInputDataConfig.resolve_path(path=args.input_config_path)
+                )
             )
 
-            return Args(
-                common=common,
-                action=run,
-                input_config=input_config
-            )
+            return Args(common=common, action=run, input_config=input_config)
 
         if args.command == "convert":
             return Args(
