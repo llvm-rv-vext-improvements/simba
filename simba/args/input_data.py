@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import List, NamedTuple, Optional
 
-from pydantic import BaseModel, FilePath, DirectoryPath, ValidationError, Field
+from pydantic import BaseModel, FilePath, DirectoryPath, ValidationError, Field, field_validator
 
 
 class RawVar(BaseModel):
@@ -12,7 +12,16 @@ class RawVar(BaseModel):
 
 class RawInputFile(BaseModel):
     name: str
-    input_file: FilePath  # TODO add validation for ".h" extension
+    input_file: FilePath = Field()
+
+    @field_validator("input_file")
+    @classmethod
+    def input_file_must_be_h_ext(cls, v: str) -> str:
+        # Check if the string ends with specific substring
+        if not v.endswith(".h"):
+            raise ValueError("Input files should be .h files")
+        return v
+
 
 
 class RawInputsDir(BaseModel):
@@ -95,7 +104,6 @@ class Input(NamedTuple):
 
 class TestCase(NamedTuple):
     vars: List[Var]
-    # TODO make validation that function exists in test case in actual code (Not here)
     function_name: str
     function_return_type: str
 
