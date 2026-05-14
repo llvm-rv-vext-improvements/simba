@@ -5,6 +5,7 @@ from pathlib import Path
 
 from simba.args.toolchain import Toolchain
 from simba.args.miniproject_config import MiniProjectConfig
+from simba.args.input_data import TestInput
 from simba.make.generate_benchmark import generate_program, GenerationOptions
 
 SCRIPT_LD = """
@@ -69,7 +70,9 @@ class MiniProject:
     def __init__(self, config: MiniProjectConfig) -> None:
         self.__toolchain = config.toolchain
         self.__sources = config.sources
-        self.__name = config.name or self.__sources[0].stem
+        self.__name = self.__generate_name(
+            config.name, self.__sources[0].stem, config.input_
+        )
         self.__build_dir = Path(".")
         self.__is_cleaning = config.is_cleaning
         self.__is_trampoline_present = self.__is_trampoline_present_now()
@@ -209,3 +212,19 @@ class MiniProject:
         raise ValueError(
             f"do not known how to compile {source}, .c/.ll/.S was expected"
         )
+
+    def __generate_name(
+        self, name: str | None, stem: str, input_: TestInput | None
+    ) -> str:
+        if name is not None:
+            return name
+
+        if input_ is None:
+            return stem
+
+        new_name = stem + input_.function_return_type + input_.function_name
+
+        for var_ in input_.vars:
+            new_name += var_.input_path.name + var_.variable
+
+        return new_name
