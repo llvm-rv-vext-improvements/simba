@@ -68,16 +68,16 @@ def get_extern_function(
 def get_loops(
     function_call_str: str,
     warmup_iterations: int | None,
-    benchmark_iterations: int | None,
+    main_iterations: int | None,
 ) -> str:
-    if warmup_iterations is None and benchmark_iterations is None:
+    if warmup_iterations is None and main_iterations is None:
         return WITHOUT_LOOP.format(function_call_str)
 
     loop_str = ""
     if warmup_iterations is not None:
         loop_str += WARMUP_LOOP.format(warmup_iterations, function_call_str)
-    if benchmark_iterations is not None:
-        loop_str += BENCH_LOOP.format(benchmark_iterations, function_call_str)
+    if main_iterations is not None:
+        loop_str += BENCH_LOOP.format(main_iterations, function_call_str)
     return loop_str
 
 
@@ -88,19 +88,19 @@ class GenerationOptions:
         variables: list[tuple[str, str]] | None = None,
         input_filenames: list[str] | None = None,
         warmup_iterations: int | None = None,
-        benchmark_iterations: int | None = None,
+        main_iterations: int | None = None,
     ):
         self.variables = variables
         self.input_filenames = input_filenames
         self.warmup_iterations = warmup_iterations
-        self.benchmark_iterations = benchmark_iterations
+        self.main_iterations = main_iterations
 
     def set_warmup_iterations(self, iterations: int) -> Self:
         self.warmup_iterations = iterations
         return self
 
-    def set_benchmark_iterations(self, iterations: int) -> Self:
-        self.benchmark_iterations = iterations
+    def set_main_iterations(self, iterations: int) -> Self:
+        self.main_iterations = iterations
         return self
 
     @staticmethod
