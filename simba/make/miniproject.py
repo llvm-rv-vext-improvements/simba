@@ -216,15 +216,19 @@ class MiniProject:
     def __generate_name(
         self, name: str | None, stem: str, input_: TestInput | None
     ) -> str:
+        new_name = ""
         if name is not None:
-            return name
-
-        if input_ is None:
+            new_name = name
+        else:
             return stem
 
-        new_name = stem + input_.function_return_type + input_.function_name
+        if input_ is None:
+            return new_name
 
+        suffix = []
+
+        suffix.extend([input_.function_return_type, input_.function_name])
         for var_ in input_.vars:
-            new_name += var_.input_path.name + var_.variable
+            suffix.extend([var_.input_path.stem, var_.variable])
 
-        return new_name
+        return new_name + "_" + "_".join(suffix)
