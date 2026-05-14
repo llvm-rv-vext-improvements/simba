@@ -132,7 +132,7 @@ def generate_program(
     loops = get_loops(
         function_call_str,
         options.warmup_iterations,
-        options.benchmark_iterations,
+        options.main_iterations,
     )
 
     return TEMPLATE.format(
