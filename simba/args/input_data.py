@@ -157,22 +157,22 @@ class InputDataConfig(NamedTuple):
 # ====================
 
 
-class TestVar(NamedTuple):
+class BenchmarkVar(NamedTuple):
     variable: str
     type_: str
     input_path: FilePath
 
 
-class TestInput(NamedTuple):
+class BencharkInput(NamedTuple):
     function_name: str
     function_return_type: str
-    vars: List[TestVar]
+    vars: List[BenchmarkVar]
 
 
-type TestInputs = List[TestInput]
+type BencharkInputs = List[BencharkInput]
 
 
-def get_test_inputs(config: InputDataConfig | None) -> TestInputs:
+def get_test_inputs(config: InputDataConfig | None) -> BencharkInputs:
     if config is None or config.test_matrix is None:
         return []
 
@@ -180,7 +180,7 @@ def get_test_inputs(config: InputDataConfig | None) -> TestInputs:
     for test_case in config.test_matrix:
         if config.inputs is None:
             test_inputs.append(
-                TestInput(
+                BencharkInput(
                     function_name=test_case.function_name,
                     function_return_type=test_case.function_return_type,
                     vars=[],
@@ -192,9 +192,9 @@ def get_test_inputs(config: InputDataConfig | None) -> TestInputs:
         for var in test_case.vars:
             for input_ in config.inputs:
                 if var.input_name == input_.name:
-                    new_vars.append(TestVar(var.name, var.type_, input_.input_file))
+                    new_vars.append(BenchmarkVar(var.name, var.type_, input_.input_file))
         test_inputs.append(
-            TestInput(
+            BencharkInput(
                 function_name=test_case.function_name,
                 function_return_type=test_case.function_return_type,
                 vars=new_vars,
