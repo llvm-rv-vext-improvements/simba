@@ -40,15 +40,9 @@ class RawInputDataConfig(BaseModel):
     test_matrix: List[RawTestCase] | None = None
 
     @classmethod
-    def resolve_path(cls, *, path: Path | None = None) -> Path:
-        if path is not None:
-            return path
-        return Path("./.input.simba.json")
-
-    @classmethod
-    def read_json(cls, path: Path) -> Optional["RawInputDataConfig"]:
-        if not path.exists():
-            return None
+    def read_json(cls, path: Path) -> "RawInputDataConfig":
+        if not path.exists() or path.is_dir():
+            raise ValueError("Path either does not exist or is directory")
         return parse_json(cls, path)
 
 
@@ -105,13 +99,13 @@ class TestCase(NamedTuple):
 
 
 class InputDataConfig(NamedTuple):
-    inputs: List[Input] | None
-    test_matrix: List[TestCase] | None
+    inputs: List[Input]
+    test_matrix: List[TestCase]
 
     def validate_var_inputs(self) -> None:
-        input_names = {elem.name for elem in (self.inputs or [])}
+        input_names = {elem.name for elem in self.inputs}
         unexpected_inputs = set()
-        for test_case in self.test_matrix or []:
+        for test_case in self.test_matrix:
             unexpected_inputs.update(
                 set(var.input_name for var in test_case.vars).difference(input_names)
             )
@@ -119,7 +113,7 @@ class InputDataConfig(NamedTuple):
         if len(unexpected_inputs) != 0:
             vars_with_unexpected_inputs = {
                 var.name
-                for test_case in self.test_matrix or []
+                for test_case in self.test_matrix
                 for var in test_case.vars
                 if var.input_name in unexpected_inputs
             }
@@ -129,10 +123,7 @@ class InputDataConfig(NamedTuple):
             )
 
     @classmethod
-    def from_raw(cls, raw: RawInputDataConfig | None) -> Optional["InputDataConfig"]:
-        if raw is None:
-            return None
-
+    def from_raw(cls, raw: RawInputDataConfig) -> "InputDataConfig":
         inputs = []
 
         for file_input in raw.input_files or []:
@@ -142,12 +133,8 @@ class InputDataConfig(NamedTuple):
             inputs.extend(Input.from_raw_dir(dir_input))
 
         config = InputDataConfig(
-            inputs=None if len(inputs) == 0 else inputs,
-            test_matrix=(
-                None
-                if raw.test_matrix is None
-                else list(map(TestCase.from_raw, raw.test_matrix))
-            ),
+            inputs=inputs,
+            test_matrix=list(map(TestCase.from_raw, raw.test_matrix or [])),
         )
 
         config.validate_var_inputs()

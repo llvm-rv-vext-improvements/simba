@@ -15,7 +15,7 @@ def plan_sources(
         raise ValueError("expected at least one toolchain, but got 0")
 
     for toolchain in args.common.toolchains:
-        for input_ in get_test_inputs(args.input_config) or [None]:
+        for input_ in get_test_inputs(args.run.input_data_config) or [None]:
             config = MiniProjectConfig(
                 toolchain=toolchain,
                 sources=args.run.paths,
