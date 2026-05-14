@@ -90,9 +90,11 @@ class MiniProject:
         d = self.__build_dir
         d.mkdir(exist_ok=True)
 
-        input_files_to_copy = list(
-            set(var_.input_path for var_ in self.__input.vars)
-        ) if self.__input is not None else []
+        input_files_to_copy = (
+            list(set(var_.input_path for var_ in self.__input.vars))
+            if self.__input is not None
+            else []
+        )
         for src in self.__sources + input_files_to_copy:
             dst = d / src.name
             shutil.copyfile(src, dst)
@@ -106,14 +108,16 @@ class MiniProject:
             with open(trampoline, "w", encoding="utf-8") as f:
                 f.write(TRAMPOLINE)
             self.__sources.append(trampoline)
-        
+
         if self.__input is not None:
             bench = d / "main.c"
             benchcode = generate_program(
                 self.__input.function_name,
                 function_return_type=self.__input.function_return_type,
                 variables=[(var_.variable, var_.type_) for var_ in self.__input.vars],
-                input_filenames=list(set(var_.input_path.name for var_ in self.__input.vars)),                
+                input_filenames=list(
+                    set(var_.input_path.name for var_ in self.__input.vars)
+                ),
             )
             with open(bench, "w", encoding="utf-8") as f:
                 f.write(benchcode)
