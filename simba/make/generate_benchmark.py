@@ -1,3 +1,7 @@
+from typing import Self, List
+
+from simba.args.input_data import TestVar
+
 TEMPLATE = """//includes
     {}
     // extern function
@@ -77,25 +81,58 @@ def get_loops(
     return loop_str
 
 
+class GenerationOptions:
+
+    def __init__(
+        self,
+        variables: list[tuple[str, str]] | None = None,
+        input_filenames: list[str] | None = None,
+        warmup_iterations: int | None = None,
+        benchmark_iterations: int | None = None,
+    ):
+        self.variables = variables
+        self.input_filenames = input_filenames
+        self.warmup_iterations = warmup_iterations
+        self.benchmark_iterations = benchmark_iterations
+
+    def set_warmup_iterations(self, iterations: int) -> Self:
+        self.warmup_iterations = iterations
+        return self
+
+    def set_benchmark_iterations(self, iterations: int) -> Self:
+        self.benchmark_iterations = iterations
+        return self
+
+    @staticmethod
+    def from_variables(variables: List[TestVar]) -> "GenerationOptions":
+        new_vars = []
+        new_input_files = set()
+
+        for var_ in variables:
+            new_vars.append((var_.variable, var_.type_))
+            new_input_files.add(var_.input_path.name)
+
+        return GenerationOptions(
+            variables=new_vars, input_filenames=list(new_input_files)
+        )
+
+
 def generate_program(
     function_name: str,
+    options: GenerationOptions,
     function_return_type: str = "void",
-    variables: list[tuple[str, str]] | None = None,
-    input_filenames: list[str] | None = None,
-    warmup_iterations: int | None = None,
-    benchmark_iterations: int | None = None,
 ) -> str:
-    includes = get_includes(input_filenames)
+    includes = get_includes(options.input_filenames)
     extern_func_str = get_extern_function(
-        function_name, function_return_type, variables
+        function_name, function_return_type, options.variables
     )
     function_call_str = get_function_call(
-        function_name, [var_ for (var_, _) in variables]
+        function_name, [var_ for (var_, _) in options.variables or []]
     )
     loops = get_loops(
         function_call_str,
-        warmup_iterations,
-        benchmark_iterations,
+        options.warmup_iterations,
+        options.benchmark_iterations,
     )
 
     return TEMPLATE.format(

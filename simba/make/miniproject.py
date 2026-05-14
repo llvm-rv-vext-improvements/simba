@@ -2,11 +2,10 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import List
 
 from simba.args.toolchain import Toolchain
-from simba.args.input_data import TestInput
-from simba.make.generate_benchmark import generate_program
+from simba.args.miniproject_config import MiniProjectConfig
+from simba.make.generate_benchmark import generate_program, GenerationOptions
 
 SCRIPT_LD = """
 MEMORY {
@@ -67,21 +66,14 @@ _start:
 
 
 class MiniProject:
-    def __init__(
-        self,
-        toolchain: Toolchain,
-        sources: List[Path],
-        name: str | None,
-        is_cleaning: bool = True,
-        input_: TestInput | None = None,
-    ) -> None:
-        self.__toolchain = toolchain
-        self.__sources = sources
-        self.__name = name or self.__sources[0].stem
+    def __init__(self, config: MiniProjectConfig) -> None:
+        self.__toolchain = config.toolchain
+        self.__sources = config.sources
+        self.__name = config.name or self.__sources[0].stem
         self.__build_dir = Path(".")
-        self.__is_cleaning = is_cleaning
+        self.__is_cleaning = config.is_cleaning
         self.__is_trampoline_present = self.__is_trampoline_present_now()
-        self.__input = input_
+        self.__input = config.input_
 
     def __enter__(self) -> "MiniProject":
         self.__build_dir = Path(tempfile.mkdtemp())
@@ -111,13 +103,11 @@ class MiniProject:
 
         if self.__input is not None:
             bench = d / "main.c"
+            options = GenerationOptions.from_variables(self.__input.vars)
             benchcode = generate_program(
-                self.__input.function_name,
+                function_name=self.__input.function_name,
                 function_return_type=self.__input.function_return_type,
-                variables=[(var_.variable, var_.type_) for var_ in self.__input.vars],
-                input_filenames=list(
-                    set(var_.input_path.name for var_ in self.__input.vars)
-                ),
+                options=options,
             )
             with open(bench, "w", encoding="utf-8") as f:
                 f.write(benchcode)
