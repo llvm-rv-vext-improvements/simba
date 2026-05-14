@@ -13,13 +13,13 @@ class RawVar(BaseModel):
 
 class RawInputFile(BaseModel):
     name: str
-    input_file: FilePath = Field()
+    input_file: FilePath
 
     @field_validator("input_file")
     @classmethod
-    def input_file_must_be_h_ext(cls, v: str) -> str:
+    def input_file_must_be_h_ext(cls, v: FilePath) -> FilePath:
         # Check if the string ends with specific substring
-        if not v.endswith(".h"):
+        if v.suffix != (".h"):
             raise ValueError("Input files should be .h files")
         return v
 
