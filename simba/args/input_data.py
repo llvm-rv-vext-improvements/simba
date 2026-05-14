@@ -82,9 +82,7 @@ class Input(NamedTuple):
                 inputs.append(
                     Input.from_raw_file(
                         RawInputFile(
-                            name=file.name[
-                                : len(file.name) - 2
-                            ],  # Removing ".h" for name
+                            name=file.stem,
                             input_file=file.resolve(),
                         ),
                     )
