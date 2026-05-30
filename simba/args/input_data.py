@@ -178,6 +178,17 @@ class InputDataConfig(NamedTuple):
 
 # ====================
 
+class RawBenchmarkVar(BaseModel):
+    variable: str
+    input_path: FilePath
+    type_: str = Field(alias="type")
+
+
+class RawBenchmarkInput(BaseModel):
+    function: RawFunctionInfo
+    iterations: RawIterationsInfo
+    vars: List[RawBenchmarkVar]
+
 
 class RawBenchmarkVar(BaseModel):
     variable: str
@@ -204,6 +215,15 @@ class BenchmarkVar(NamedTuple):
             input_path=Path(raw.input_path),
         )
 
+    @classmethod
+    def from_raw(cls, raw: RawBenchmarkVar) -> "BenchmarkVar":
+        return BenchmarkVar(
+            variable=raw.variable,
+            type_=raw.type_,
+            input_path=raw.input_path
+        )
+
+
 
 class FunctionInput(NamedTuple):
     name: str
@@ -211,7 +231,11 @@ class FunctionInput(NamedTuple):
 
     @classmethod
     def from_raw(cls, raw: RawFunctionInfo) -> "FunctionInput":
-        return FunctionInput(name=raw.name, return_type=raw.return_type)
+        return FunctionInput(
+            name=raw.name,
+            return_type=raw.return_type
+        )
+
 
 
 class IterationsInput(NamedTuple):
@@ -245,6 +269,14 @@ class BenchmarkInput(NamedTuple):
         var_strs = [f"{v.variable}:{v.var_type}:{v.input_path.name}" for v in self.vars]
         vars_str = f"[{', '.join(var_strs)}]"
         return f"{func_str} | iters={iter_str} | vars={vars_str}"
+
+    @classmethod
+    def from_raw(cls, raw: RawBenchmarkInput) -> "BenchmarkInput":
+        return BenchmarkInput(
+            function=FunctionInput.from_raw(raw.function),
+            iterations=IterationsInput.from_raw(raw.iterations),
+            vars=[BenchmarkVar.from_raw(var_) for var_ in raw.vars]
+        )
 
 
 type BenchmarkInputs = List[BenchmarkInput]
