@@ -106,7 +106,11 @@ class MiniProject:
 
         if self.__input is not None:
             bench = d / "main.c"
-            options = GenerationOptions.from_variables(self.__input.vars)
+            options = GenerationOptions.from_variables(
+                self.__input.vars,
+                self.__input.iterations.warmup,
+                self.__input.iterations.main,
+            )
             benchcode = generate_program(
                 function_name=self.__input.function_name,
                 function_return_type=self.__input.function_return_type,
