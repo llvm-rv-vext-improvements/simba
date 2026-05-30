@@ -41,7 +41,7 @@ class RawIterationsInfo(BaseModel):
 class RawTestCase(BaseModel):
     vars: List[RawVar]
     function: RawFunctionInfo
-    iterations: RawIterationsInfo
+    iterations: RawIterationsInfo | None = None
 
 
 class RawInputDataConfig(BaseModel):
@@ -125,7 +125,7 @@ class TestCase(NamedTuple):
         return TestCase(
             vars=list(map(Var.from_raw, raw.vars)),
             function=FunctionInfo.from_raw(raw.function),
-            iterations=IterationsInfo.from_raw(raw.iterations),
+            iterations=(IterationsInfo.from_raw(raw.iterations) if raw.iterations is not None else IterationsInfo()),
         )
 
 

@@ -112,8 +112,8 @@ class MiniProject:
                 self.__input.iterations.main,
             )
             benchcode = generate_program(
-                function_name=self.__input.function_name,
-                function_return_type=self.__input.function_return_type,
+                function_name=self.__input.function.name,
+                function_return_type=self.__input.function.return_type,
                 options=options,
             )
             with open(bench, "w", encoding="utf-8") as f:
@@ -231,7 +231,7 @@ class MiniProject:
 
         suffix = []
 
-        suffix.extend([input_.function_return_type, input_.function_name])
+        suffix.extend([input_.function.return_type, input_.function.name])
         for var_ in input_.vars:
             suffix.extend([var_.input_path.stem, var_.variable])
 
