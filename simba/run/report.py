@@ -5,7 +5,14 @@ from typing import NamedTuple
 from pydantic import BaseModel
 
 from simba.args.toolchain import RawToolchain, Toolchain
-from simba.args.input_data import BenchmarkInput, RawBenchmarkInput, RawFunctionInfo, RawIterationsInfo, RawBenchmarkVar
+from simba.args.input_data import (
+    BenchmarkInput,
+    RawBenchmarkInput,
+    RawFunctionInfo,
+    RawIterationsInfo,
+    RawBenchmarkVar,
+)
+
 
 class Report(NamedTuple):
     name: str
@@ -37,7 +44,11 @@ class RawReport(BaseModel):
         if self.toolchain.cflags is None:
             raise ValueError("RawReport: toolchain.cflags should be set")
 
-        benchmark_config = BenchmarkInput.from_raw(self.benchmark_config) if self.benchmark_config is not None else None
+        benchmark_config = (
+            BenchmarkInput.from_raw(self.benchmark_config)
+            if self.benchmark_config is not None
+            else None
+        )
         return Report(
             name=self.name,
             toolchain=Toolchain(
@@ -77,11 +88,11 @@ class RawReport(BaseModel):
                 vars=[
                     RawBenchmarkVar(
                         variable=var_.variable,
-                        input_path=var_.input_path,
-                        type_=var_.type_
+                        input_path=str(var_.input_path),
+                        var_type=var_.type_,
                     )
                     for var_ in pure.benchmark_config.vars
-                ]
+                ],
             )
 
         return RawReport(
