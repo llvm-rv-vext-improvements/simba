@@ -1,4 +1,4 @@
-from typing import Self, List
+from typing import Self, List, NamedTuple
 
 from simba.args.input_data import BenchmarkVar
 
@@ -74,36 +74,18 @@ def get_loops(
     return loop_str
 
 
-class GenerationOptions:
-
-    def __init__(
-        self,
-        variables: list[tuple[str, str]] | None,
-        input_filenames: list[str] | None = None,
-        warmup_iterations: int | None = None,
-        main_iterations: int | None = None,
-    ):
-        if variables is None:
-            variables = []
-
-        if input_filenames is None:
-            input_filenames = []
-
-        self.variables: list[tuple[str, str]] = variables
-        self.input_filenames: list[str] = input_filenames
-        self.warmup_iterations: int | None = warmup_iterations
-        self.main_iterations: int | None = main_iterations
-
-    def set_warmup_iterations(self, iterations: int) -> Self:
-        self.warmup_iterations = iterations
-        return self
-
-    def set_main_iterations(self, iterations: int) -> Self:
-        self.main_iterations = iterations
-        return self
+class GenerationOptions(NamedTuple):
+    variables: list[tuple[str, str]] | None
+    input_filenames: list[str] | None = None
+    warmup_iterations: int = 0
+    main_iterations: int = 0
 
     @staticmethod
-    def from_variables(variables: List[BenchmarkVar]) -> "GenerationOptions":
+    def from_variables(
+        variables: List[BenchmarkVar],
+        warmup_iterations: int = 0,
+        main_iterations: int = 0,
+    ) -> "GenerationOptions":
         new_vars = []
         new_input_files = set()
 
@@ -112,7 +94,10 @@ class GenerationOptions:
             new_input_files.add(var_.input_path.name)
 
         return GenerationOptions(
-            variables=new_vars, input_filenames=list(new_input_files)
+            variables=new_vars,
+            input_filenames=list(new_input_files),
+            warmup_iterations=warmup_iterations,
+            main_iterations=main_iterations,
         )
 
 
