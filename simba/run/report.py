@@ -79,7 +79,7 @@ class RawReport(BaseModel):
             raw_benchmark_config = RawBenchmarkInput(
                 function=RawFunctionInfo(
                     name=pure.benchmark_config.function.name,
-                    return_type=pure.benchmark_config.function.name,
+                    return_type=pure.benchmark_config.function.return_type,
                 ),
                 iterations=RawIterationsInfo(
                     warmup=pure.benchmark_config.iterations.warmup,
