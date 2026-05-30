@@ -5,7 +5,7 @@ from pathlib import Path
 
 from simba.args.toolchain import Toolchain
 from simba.args.miniproject_config import MiniProjectConfig
-from simba.args.input_data import BencharkInput
+from simba.args.input_data import BenchmarkInput
 from simba.make.driver import generate_program, GenerationOptions
 
 SCRIPT_LD = """
@@ -214,7 +214,7 @@ class MiniProject:
         )
 
     def __generate_name(
-        self, name: str | None, stem: str, input_: BencharkInput | None
+        self, name: str | None, stem: str, input_: BenchmarkInput | None
     ) -> str:
         new_name = ""
         if name is not None:

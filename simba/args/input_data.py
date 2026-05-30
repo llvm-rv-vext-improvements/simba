@@ -28,10 +28,20 @@ class RawInputsDir(BaseModel):
     inputs_dir: DirectoryPath
 
 
+class RawFunctionInfo(BaseModel):
+    name: str
+    return_type: str
+
+
+class RawIterationsInfo(BaseModel):
+    warmup: int = 0
+    main: int = 0
+
+
 class RawTestCase(BaseModel):
     vars: List[RawVar]
-    function_name: str
-    function_return_type: str
+    function: RawFunctionInfo
+    iterations: RawIterationsInfo
 
 
 class RawInputDataConfig(BaseModel):
@@ -84,17 +94,38 @@ class Input(NamedTuple):
         return inputs
 
 
+class FunctionInfo(NamedTuple):
+    name: str
+    return_type: str
+
+    @classmethod
+    def from_raw(cls, raw: RawFunctionInfo) -> "FunctionInfo":
+        return FunctionInfo(name=raw.name, return_type=raw.return_type)
+
+
+class IterationsInfo(NamedTuple):
+    warmup: int = 0
+    main: int = 0
+
+    @classmethod
+    def from_raw(cls, raw: RawIterationsInfo) -> "IterationsInfo":
+        return IterationsInfo(
+            warmup=raw.warmup,
+            main=raw.main,
+        )
+
+
 class TestCase(NamedTuple):
     vars: List[Var]
-    function_name: str
-    function_return_type: str
+    function: FunctionInfo
+    iterations: IterationsInfo
 
     @classmethod
     def from_raw(cls, raw: RawTestCase) -> "TestCase":
         return TestCase(
             vars=list(map(Var.from_raw, raw.vars)),
-            function_name=raw.function_name,
-            function_return_type=raw.function_return_type,
+            function=FunctionInfo.from_raw(raw.function),
+            iterations=IterationsInfo.from_raw(raw.iterations),
         )
 
 
@@ -150,26 +181,42 @@ class BenchmarkVar(NamedTuple):
     input_path: FilePath
 
 
-class BencharkInput(NamedTuple):
-    function_name: str
-    function_return_type: str
+class FunctionInput(NamedTuple):
+    name: str
+    return_type: str
+
+
+class IterationsInput(NamedTuple):
+    warmup: int
+    main: int
+
+
+class BenchmarkInput(NamedTuple):
+    function: FunctionInput
+    iterations: IterationsInput
     vars: List[BenchmarkVar]
 
 
-type BencharkInputs = List[BencharkInput]
+type BenchmarkInputs = List[BenchmarkInput]
 
 
-def get_test_inputs(config: InputDataConfig | None) -> BencharkInputs:
+def get_test_inputs(config: InputDataConfig | None) -> BenchmarkInputs:
     if config is None or config.test_matrix is None:
         return []
 
     test_inputs = []
     for test_case in config.test_matrix:
+        function = FunctionInput(
+            name=test_case.function.name, return_type=test_case.function.return_type
+        )
+        iterations = IterationsInput(
+            warmup=test_case.iterations.warmup, main=test_case.iterations.main
+        )
         if config.inputs is None:
             test_inputs.append(
-                BencharkInput(
-                    function_name=test_case.function_name,
-                    function_return_type=test_case.function_return_type,
+                BenchmarkInput(
+                    function=function,
+                    iterations=iterations,
                     vars=[],
                 )
             )
@@ -183,9 +230,9 @@ def get_test_inputs(config: InputDataConfig | None) -> BencharkInputs:
                         BenchmarkVar(var.name, var.type_, input_.input_file)
                     )
         test_inputs.append(
-            BencharkInput(
-                function_name=test_case.function_name,
-                function_return_type=test_case.function_return_type,
+            BenchmarkInput(
+                function=function,
+                iterations=iterations,
                 vars=new_vars,
             )
         )
