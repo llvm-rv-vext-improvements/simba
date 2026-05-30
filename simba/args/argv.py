@@ -189,5 +189,5 @@ class Args(NamedTuple):
             return None
 
         return InputDataConfig.from_raw(
-            RawInputDataConfig.read_json(args.input_config_path)
+            RawInputDataConfig.read_json(Path(args.input_config_path))
         )
