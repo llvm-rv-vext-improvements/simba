@@ -125,7 +125,11 @@ class TestCase(NamedTuple):
         return TestCase(
             vars=list(map(Var.from_raw, raw.vars)),
             function=FunctionInfo.from_raw(raw.function),
-            iterations=(IterationsInfo.from_raw(raw.iterations) if raw.iterations is not None else IterationsInfo()),
+            iterations=(
+                IterationsInfo.from_raw(raw.iterations)
+                if raw.iterations is not None
+                else IterationsInfo()
+            ),
         )
 
 
