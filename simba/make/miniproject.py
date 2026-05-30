@@ -157,6 +157,10 @@ class MiniProject:
     @property
     def toolchain(self) -> Toolchain:
         return self.__toolchain
+    
+    @property
+    def benchmark_input(self) -> BenchmarkInput:
+        return self.__input
 
     @property
     def benchmark_input(self) -> BenchmarkInput | None:
