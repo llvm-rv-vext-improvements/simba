@@ -64,14 +64,13 @@ def get_loops(
     warmup_iterations: int | None,
     main_iterations: int | None,
 ) -> str:
-    if warmup_iterations is None and main_iterations is None:
-        return WITHOUT_LOOP.format(function_call_str)
-
     loop_str = ""
-    if warmup_iterations is not None:
+    if warmup_iterations is not None and warmup_iterations != 0:
         loop_str += WARMUP_LOOP.format(warmup_iterations, function_call_str)
-    if main_iterations is not None:
+    if main_iterations is not None and main_iterations != 0:
         loop_str += BENCH_LOOP.format(main_iterations, function_call_str)
+    else:
+        loop_str += WITHOUT_LOOP.format(function_call_str)
     return loop_str
 
 
