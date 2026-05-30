@@ -1,4 +1,4 @@
-from typing import Self, List, NamedTuple
+from typing import List, NamedTuple
 
 from simba.args.input_data import BenchmarkVar
 
@@ -75,8 +75,8 @@ def get_loops(
 
 
 class GenerationOptions(NamedTuple):
-    variables: list[tuple[str, str]] | None
-    input_filenames: list[str] | None = None
+    variables: list[tuple[str, str]]
+    input_filenames: list[str]
     warmup_iterations: int = 0
     main_iterations: int = 0
 
