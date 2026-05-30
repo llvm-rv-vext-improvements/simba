@@ -37,7 +37,7 @@ def execute_task(task: Task) -> Report:
         return Report(
             name=p.name,
             toolchain=p.toolchain,
-            benchmark_config=p.__input,
+            benchmark_config=p.benchmark_input,
             instrunctions_count=instrs,
             cycles_count=cycles,
             simulation_time=timer.duration,
