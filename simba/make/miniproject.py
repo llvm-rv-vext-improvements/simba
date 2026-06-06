@@ -163,10 +163,6 @@ class MiniProject:
         return self.__input
 
     @property
-    def benchmark_input(self) -> BenchmarkInput | None:
-        return self.__input
-
-    @property
     def is_trampoline_present(self) -> bool:
         return self.__is_trampoline_present
 

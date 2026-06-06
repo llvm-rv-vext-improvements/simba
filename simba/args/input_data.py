@@ -182,18 +182,6 @@ class InputDataConfig(NamedTuple):
 class RawBenchmarkVar(BaseModel):
     variable: str
     input_path: str
-    type_: str = Field(alias="var_type")
-
-
-class RawBenchmarkInput(BaseModel):
-    function: RawFunctionInfo
-    iterations: RawIterationsInfo
-    vars: List[RawBenchmarkVar]
-
-
-class RawBenchmarkVar(BaseModel):
-    variable: str
-    input_path: str
     var_type: str = Field(alias="var_type")
 
 
@@ -242,14 +230,6 @@ class BenchmarkInput(NamedTuple):
     function: FunctionInput
     iterations: IterationsInput
     vars: Tuple[BenchmarkVar, ...]
-
-    @classmethod
-    def from_raw(cls, raw: RawBenchmarkInput) -> "BenchmarkInput":
-        return BenchmarkInput(
-            function=FunctionInput.from_raw(raw.function),
-            iterations=IterationsInput.from_raw(raw.iterations),
-            vars=tuple(BenchmarkVar.from_raw(var_) for var_ in raw.vars),
-        )
 
     def to_csv_str(self) -> str:
         func_str = f"{self.function.name}({self.function.return_type})"
