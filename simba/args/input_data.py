@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Tuple
 from pydantic import BaseModel, FilePath, DirectoryPath, Field, field_validator
 
 from simba.args.parse_json import parse_json
@@ -179,26 +179,72 @@ class InputDataConfig(NamedTuple):
 # ====================
 
 
+class RawBenchmarkVar(BaseModel):
+    variable: str
+    input_path: str
+    var_type: str = Field(alias="var_type")
+
+
+class RawBenchmarkInput(BaseModel):
+    function: RawFunctionInfo
+    iterations: RawIterationsInfo
+    vars: List[RawBenchmarkVar]
+
+
 class BenchmarkVar(NamedTuple):
     variable: str
-    type_: str
-    input_path: FilePath
+    var_type: str
+    input_path: Path
+
+    @classmethod
+    def from_raw(cls, raw: RawBenchmarkVar) -> "BenchmarkVar":
+        return BenchmarkVar(
+            variable=raw.variable,
+            var_type=raw.var_type,
+            input_path=Path(raw.input_path),
+        )
 
 
 class FunctionInput(NamedTuple):
     name: str
     return_type: str
 
+    @classmethod
+    def from_raw(cls, raw: RawFunctionInfo) -> "FunctionInput":
+        return FunctionInput(name=raw.name, return_type=raw.return_type)
+
 
 class IterationsInput(NamedTuple):
     warmup: int
     main: int
 
+    @classmethod
+    def from_raw(cls, raw: RawIterationsInfo) -> "IterationsInput":
+        return IterationsInput(
+            warmup=raw.warmup,
+            main=raw.main,
+        )
+
 
 class BenchmarkInput(NamedTuple):
     function: FunctionInput
     iterations: IterationsInput
-    vars: List[BenchmarkVar]
+    vars: Tuple[BenchmarkVar, ...]
+
+    @classmethod
+    def from_raw(cls, raw: RawBenchmarkInput) -> "BenchmarkInput":
+        return BenchmarkInput(
+            function=FunctionInput.from_raw(raw.function),
+            iterations=IterationsInput.from_raw(raw.iterations),
+            vars=tuple(BenchmarkVar.from_raw(var_) for var_ in raw.vars),
+        )
+
+    def to_csv_str(self) -> str:
+        func_str = f"{self.function.name}({self.function.return_type})"
+        iter_str = f"{self.iterations.warmup}/{self.iterations.main}"
+        var_strs = [f"{v.variable}:{v.var_type}:{v.input_path.name}" for v in self.vars]
+        vars_str = f"[{', '.join(var_strs)}]"
+        return f"{func_str} | iters={iter_str} | vars={vars_str}"
 
 
 type BenchmarkInputs = List[BenchmarkInput]
@@ -221,7 +267,7 @@ def get_test_inputs(config: InputDataConfig | None) -> BenchmarkInputs:
                 BenchmarkInput(
                     function=function,
                     iterations=iterations,
-                    vars=[],
+                    vars=tuple(),
                 )
             )
             continue
@@ -237,7 +283,7 @@ def get_test_inputs(config: InputDataConfig | None) -> BenchmarkInputs:
             BenchmarkInput(
                 function=function,
                 iterations=iterations,
-                vars=new_vars,
+                vars=tuple(new_vars),
             )
         )
 

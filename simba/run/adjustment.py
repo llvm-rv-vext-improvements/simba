@@ -68,6 +68,7 @@ def adjust_report(report: Report, nop: Report) -> Report:
     return Report(
         name=report.name,
         toolchain=report.toolchain,
+        benchmark_config=report.benchmark_config,
         instrunctions_count=report.instrunctions_count - nop.instrunctions_count,
         cycles_count=report.cycles_count - nop.cycles_count,
         simulation_time=report.simulation_time,
