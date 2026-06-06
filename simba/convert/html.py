@@ -6,9 +6,6 @@ from simba.convert.csv import DiffBenchmarkRow
 
 
 def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
-    # LLM-generated
-    # pylint: disable=all
-
     table = list(table)
     max_diffs = max((len(row.diffs) for row in table), default=0)
 
@@ -42,13 +39,16 @@ def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
         color_css_parts.append(f".tc-{letter} {{ color: {color}; font-weight: bold; }}")
     color_css = "\n        ".join(color_css_parts)
 
+    # Divider indices (1-indexed for CSS nth-child)
+    # New column layout: 1=Name, 2=BenchmarkConfig, 3=Conf0, 4=Instrs0, 5=Cycles0,
+    # then for each diff: 6=Conf1,7=Instrs1,8=ΔInstrs1,9=ΔInstrs1',10=Cycles1,11=ΔCycles1,12=ΔCycles1', etc.
     divider_indices = []
-    if any(table):
-        divider_indices.append(1)
-    if max_diffs > 0:
-        divider_indices.append(4)
-    for i in range(1, max_diffs):
-        divider_indices.append(4 + i * 7)
+    if table:
+        divider_indices.append(2)      # after Config column
+        divider_indices.append(5)      # after base metrics (Conf0/Instrs0/Cycles0)
+        for i in range(1, max_diffs + 1):
+            # last column of diff i is at position 5 + i*7
+            divider_indices.append(5 + i * 7)
 
     divider_css = ""
     if divider_indices:
@@ -61,8 +61,9 @@ def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
         body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 2em; background-color: #fdfdfd; color: #333; }}
         h1, h2 {{ color: #111; border-bottom: 2px solid #eee; padding-bottom: 10px; }}
         table {{ border-collapse: collapse; width: auto; margin-bottom: 2em; font-size: 0.9em; }}
-        th, td {{ border: 1px solid #ddd; padding: 8px 10px; text-align: right; white-space: nowrap; }}
+        th, td {{ border: 1px solid #ddd; padding: 8px 10px; white-space: nowrap; }}
         td:first-child, th:first-child {{ text-align: left; font-weight: bold; }}
+        td:nth-child(2) {{ text-align: left; white-space: normal; max-width: 300px; word-break: break-word; }}  /* config column */
         thead th {{ background-color: #f2f2f2; position: sticky; top: 0; z-index: 10; }}
         tbody tr:nth-child(even) {{ background-color: #f9f9f9; }}
         tbody tr:hover {{ background-color: #e9e9e9; }}
@@ -161,14 +162,14 @@ def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
         html_parts.append('<table id="results-table">')
         html_parts.append("<thead><tr>")
 
-        header_th_parts = ['<th class="sortable">Name</th>']
-        header_th_parts.extend(
-            [
-                '<th class="sortable">Conf<sub>0</sub></th>',
-                '<th class="sortable">Instrs<sub>0</sub></th>',
-                '<th class="sortable">Cycles<sub>0</sub></th>',
-            ]
-        )
+        # Header columns: Name, Config, then base, then diffs
+        header_th_parts = [
+            '<th class="sortable">Name</th>',
+            '<th class="sortable">Benchmark Config</th>',
+            '<th class="sortable">Conf<sub>0</sub></th>',
+            '<th class="sortable">Instrs<sub>0</sub></th>',
+            '<th class="sortable">Cycles<sub>0</sub></th>',
+        ]
 
         for i in range(1, max_diffs + 1):
             header_th_parts.extend(
@@ -189,43 +190,38 @@ def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
 
         for row in table:
             row_parts = ["<tr>"]
-            if row.base.is_customly_trampolined:
-                row_parts.append(f"<td><i>{html.escape(row.name)}</i></td>")
-            else:
-                row_parts.append(f"<td>{html.escape(row.name)}</td>")
+            # Name column with italic if trampolined
+            name_cell = f"<i>{html.escape(row.name)}</i>" if row.base.is_customly_trampolined else html.escape(row.name)
+            row_parts.append(f"<td>{name_cell}</td>")
 
-            base_conf_letter = toolchain_map.get(row.base.toolchain, "?")
-            row_parts.append(
-                f'<td class="tc-{base_conf_letter}">{base_conf_letter}</td>'
-            )
+            # Config column
+            config_str = row.config.to_csv_str() if row.config else ""
+            row_parts.append(f"<td>{html.escape(config_str)}</td>")
+
+            # Base toolchain column (Conf0)
+            base_letter = toolchain_map.get(row.base.toolchain, "?")
+            row_parts.append(f'<td class="tc-{base_letter}">{base_letter}</td>')
             row_parts.append(f"<td>{row.base.instrs:,}</td>")
             row_parts.append(f"<td>{row.base.cycles:,}</td>")
 
+            # Diff columns
             for diff in row.diffs:
-
                 def get_diff_class(val):
-                    return (
-                        "negative-diff"
-                        if val > 0
-                        else "positive-diff" if val < 0 else ""
-                    )
+                    return "negative-diff" if val > 0 else "positive-diff" if val < 0 else ""
 
-                diff_conf_letter = toolchain_map.get(diff.toolchain, "?")
-                row_parts.extend(
-                    [
-                        f'<td class="tc-{diff_conf_letter}">{diff_conf_letter}</td>',
-                        f"<td>{diff.instrs:,}</td>",
-                        f'<td class="{get_diff_class(diff.instrs_diff_abs)}">{diff.instrs_diff_abs:+,}</td>',
-                        f'<td class="{get_diff_class(diff.instrs_diff_rel)}" data-sort-value="{diff.instrs_diff_rel}">{diff.instrs_diff_rel:+.2%}</td>',
-                        f"<td>{diff.cycles:,}</td>",
-                        f'<td class="{get_diff_class(diff.cycles_diff_abs)}">{diff.cycles_diff_abs:+,}</td>',
-                        f'<td class="{get_diff_class(diff.cycles_diff_rel)}" data-sort-value="{diff.cycles_diff_rel}">{diff.cycles_diff_rel:+.2%}</td>',
-                    ]
-                )
+                diff_letter = toolchain_map.get(diff.toolchain, "?")
+                row_parts.append(f'<td class="tc-{diff_letter}">{diff_letter}</td>')
+                row_parts.append(f"<td>{diff.instrs:,}</td>")
+                row_parts.append(f'<td class="{get_diff_class(diff.instrs_diff_abs)}">{diff.instrs_diff_abs:+,}</td>')
+                row_parts.append(f'<td class="{get_diff_class(diff.instrs_diff_rel)}" data-sort-value="{diff.instrs_diff_rel}">{diff.instrs_diff_rel:+.2%}</td>')
+                row_parts.append(f"<td>{diff.cycles:,}</td>")
+                row_parts.append(f'<td class="{get_diff_class(diff.cycles_diff_abs)}">{diff.cycles_diff_abs:+,}</td>')
+                row_parts.append(f'<td class="{get_diff_class(diff.cycles_diff_rel)}" data-sort-value="{diff.cycles_diff_rel}">{diff.cycles_diff_rel:+.2%}</td>')
 
-            num_empty_cols = (max_diffs - len(row.diffs)) * 7
-            if num_empty_cols > 0:
-                row_parts.append("<td></td>" * num_empty_cols)
+            # Fill missing diff columns if this row has fewer diffs
+            missing = max_diffs - len(row.diffs)
+            if missing > 0:
+                row_parts.append("<td></td>" * (missing * 7))
 
             row_parts.append("</tr>")
             html_parts.append("".join(row_parts))
