@@ -90,7 +90,7 @@ class GenerationOptions(NamedTuple):
         new_input_files = set()
 
         for var_ in variables:
-            new_vars.append((var_.variable, var_.type_))
+            new_vars.append((var_.variable, var_.var_type))
             new_input_files.add(var_.input_path.name)
 
         return GenerationOptions(

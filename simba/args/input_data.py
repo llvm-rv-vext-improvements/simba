@@ -182,7 +182,7 @@ class InputDataConfig(NamedTuple):
 class RawBenchmarkVar(BaseModel):
     variable: str
     input_path: str
-    type_: str = Field(alias="var_type")
+    var_type: str = Field(alias="var_type")
 
 
 class RawBenchmarkInput(BaseModel):
@@ -193,21 +193,16 @@ class RawBenchmarkInput(BaseModel):
 
 class BenchmarkVar(NamedTuple):
     variable: str
-    type_: str
+    var_type: str
     input_path: Path
 
     @classmethod
     def from_raw(cls, raw: RawBenchmarkVar) -> "BenchmarkVar":
         return BenchmarkVar(
-            variable=raw.variable, type_=raw.type_, input_path=Path(raw.input_path)
+            variable=raw.variable,
+            var_type=raw.var_type,
+            input_path=Path(raw.input_path),
         )
-    
-    def to_csv_str(self) -> str:
-        func_str = f"{self.function.name}({self.function.return_type})"
-        iter_str = f"{self.iterations.warmup}/{self.iterations.main}"
-        var_strs = [f"{v.variable}:{v.type_}:{v.input_path.name}" for v in self.vars]
-        vars_str = f"[{', '.join(var_strs)}]"
-        return f"{func_str} | iters={iter_str} | vars={vars_str}"
 
 
 class FunctionInput(NamedTuple):
@@ -241,10 +236,15 @@ class BenchmarkInput(NamedTuple):
         return BenchmarkInput(
             function=FunctionInput.from_raw(raw.function),
             iterations=IterationsInput.from_raw(raw.iterations),
-            vars=tuple(
-                BenchmarkVar.from_raw(var_) for var_ in raw.vars
-            ),
+            vars=tuple(BenchmarkVar.from_raw(var_) for var_ in raw.vars),
         )
+
+    def to_csv_str(self) -> str:
+        func_str = f"{self.function.name}({self.function.return_type})"
+        iter_str = f"{self.iterations.warmup}/{self.iterations.main}"
+        var_strs = [f"{v.variable}:{v.var_type}:{v.input_path.name}" for v in self.vars]
+        vars_str = f"[{', '.join(var_strs)}]"
+        return f"{func_str} | iters={iter_str} | vars={vars_str}"
 
 
 type BenchmarkInputs = List[BenchmarkInput]

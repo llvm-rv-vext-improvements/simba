@@ -14,7 +14,7 @@ class Measurement(NamedTuple):
 
 class BenchmarkRow(NamedTuple):
     name: str
-    config: BenchmarkInput | None 
+    config: BenchmarkInput | None
     measurements: List[Measurement]
 
 

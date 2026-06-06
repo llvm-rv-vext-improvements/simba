@@ -89,7 +89,7 @@ class RawReport(BaseModel):
                     RawBenchmarkVar(
                         variable=var_.variable,
                         input_path=str(var_.input_path),
-                        var_type=var_.type_,
+                        var_type=var_.var_type,
                     )
                     for var_ in pure.benchmark_config.vars
                 ],
