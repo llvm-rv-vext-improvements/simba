@@ -1,7 +1,8 @@
-from typing import Dict, Iterable, List, NamedTuple
+from typing import Dict, Iterable, List, NamedTuple, Tuple, Optional
 
 from simba.args.toolchain import Toolchain
 from simba.run.report import Report
+from simba.args.input_data import BenchmarkInput
 
 
 class Measurement(NamedTuple):
@@ -13,6 +14,7 @@ class Measurement(NamedTuple):
 
 class BenchmarkRow(NamedTuple):
     name: str
+    config: BenchmarkInput | None 
     measurements: List[Measurement]
 
 
@@ -28,56 +30,54 @@ class DiffMeasurement(NamedTuple):
 
 class DiffBenchmarkRow(NamedTuple):
     name: str
+    config: BenchmarkInput | None
     base: Measurement
     diffs: List[DiffMeasurement]
 
 
 def reports_to_table(reports: List[Report]) -> Iterable[BenchmarkRow]:
-    def unwrap(x, name: str):
-        if x is None:
-            raise ValueError(f"unexpected empty {name}")
-        return x
-
-    reports_by_name: Dict[str, List[Report]] = {}
+    groups: Dict[Tuple[str, Optional[BenchmarkInput]], List[Report]] = {}
     for report in reports:
-        reports_by_name[report.name] = reports_by_name.get(report.name, [])
-        reports_by_name[report.name].append(report)
+        key = (report.name, report.benchmark_config)
+        groups.setdefault(key, []).append(report)
 
-    for name, enemies in reports_by_name.items():
-        yield BenchmarkRow(
-            name=name,
-            measurements=[
+    for (name, config), rep_list in groups.items():
+        measurements = []
+        for rep in rep_list:
+            if rep.toolchain is None:
+                raise ValueError(f"unexpected empty toolchain in report {rep.name}")
+            measurements.append(
                 Measurement(
-                    toolchain=unwrap(report.toolchain, "toolchain"),
-                    instrs=report.instrunctions_count,
-                    cycles=report.cycles_count,
-                    is_customly_trampolined=report.is_customly_trampolined,
+                    toolchain=rep.toolchain,
+                    instrs=rep.instrunctions_count,
+                    cycles=rep.cycles_count,
+                    is_customly_trampolined=rep.is_customly_trampolined,
                 )
-                for report in enemies
-            ],
-        )
+            )
+        yield BenchmarkRow(name=name, config=config, measurements=measurements)
 
 
 def table_to_diff(table: Iterable[BenchmarkRow]) -> Iterable[DiffBenchmarkRow]:
     def div(a, b):
-        if b == 0:
-            return 0
-        return a / b
+        return 0 if b == 0 else a / b
 
     for row in table:
-        b = row.measurements[0]
+        if not row.measurements:
+            continue
+        base = row.measurements[0]
         yield DiffBenchmarkRow(
             name=row.name,
-            base=b,
+            config=row.config,
+            base=base,
             diffs=[
                 DiffMeasurement(
                     toolchain=m.toolchain,
                     instrs=m.instrs,
-                    instrs_diff_abs=m.instrs - b.instrs,
-                    instrs_diff_rel=div(m.instrs - b.instrs, b.instrs),
+                    instrs_diff_abs=m.instrs - base.instrs,
+                    instrs_diff_rel=div(m.instrs - base.instrs, base.instrs),
                     cycles=m.cycles,
-                    cycles_diff_abs=m.cycles - b.cycles,
-                    cycles_diff_rel=div(m.cycles - b.cycles, b.cycles),
+                    cycles_diff_abs=m.cycles - base.cycles,
+                    cycles_diff_rel=div(m.cycles - base.cycles, base.cycles),
                 )
                 for m in row.measurements[1:]
             ],
@@ -90,7 +90,7 @@ def table_to_csv(table: Iterable[DiffBenchmarkRow]) -> str:
     rows = []
 
     # Header
-    header_parts = ["Name"]
+    header_parts = ["Name", "BenchmarkConfig"]
 
     # Base column
     header_parts.extend(["Conf0", "Instrs0", "Cycles0", "IsTrampolined0"])
@@ -114,7 +114,7 @@ def table_to_csv(table: Iterable[DiffBenchmarkRow]) -> str:
 
     # Data rows
     for row in table:
-        data_parts = [row.name]
+        data_parts = [row.name, repr(row.config)]
 
         # Base measurement
         data_parts.extend(
@@ -142,7 +142,7 @@ def table_to_csv(table: Iterable[DiffBenchmarkRow]) -> str:
 
         # Fill empty columns if this row has fewer diffs
         for _ in range(len(row.diffs), max_diffs):
-            data_parts.extend([""] * 7)  # 7 columns per diff
+            data_parts.extend([""] * 7)
 
         rows.append(",".join(data_parts))
 

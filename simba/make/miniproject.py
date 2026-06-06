@@ -105,7 +105,7 @@ class MiniProject:
         if self.__input is not None:
             bench = d / "main.c"
             options = GenerationOptions.from_variables(
-                self.__input.vars,
+                list(self.__input.vars),
                 self.__input.iterations.warmup,
                 self.__input.iterations.main,
             )

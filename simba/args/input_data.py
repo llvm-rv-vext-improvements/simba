@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Tuple
 from pydantic import BaseModel, FilePath, DirectoryPath, Field, field_validator
 
 from simba.args.parse_json import parse_json
@@ -227,14 +227,16 @@ class IterationsInput(NamedTuple):
 class BenchmarkInput(NamedTuple):
     function: FunctionInput
     iterations: IterationsInput
-    vars: List[BenchmarkVar]
+    vars: Tuple[BenchmarkVar, ...]  # changed from List to Tuple
 
     @classmethod
     def from_raw(cls, raw: RawBenchmarkInput) -> "BenchmarkInput":
         return BenchmarkInput(
             function=FunctionInput.from_raw(raw.function),
             iterations=IterationsInput.from_raw(raw.iterations),
-            vars=[BenchmarkVar.from_raw(var_) for var_ in raw.vars],
+            vars=tuple(
+                BenchmarkVar.from_raw(var_) for var_ in raw.vars
+            ),  # convert to tuple
         )
 
 
@@ -258,7 +260,7 @@ def get_test_inputs(config: InputDataConfig | None) -> BenchmarkInputs:
                 BenchmarkInput(
                     function=function,
                     iterations=iterations,
-                    vars=[],
+                    vars=tuple(),
                 )
             )
             continue
@@ -274,7 +276,7 @@ def get_test_inputs(config: InputDataConfig | None) -> BenchmarkInputs:
             BenchmarkInput(
                 function=function,
                 iterations=iterations,
-                vars=new_vars,
+                vars=tuple(new_vars),
             )
         )
 
