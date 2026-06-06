@@ -70,9 +70,7 @@ class MiniProject:
     def __init__(self, config: MiniProjectConfig) -> None:
         self.__toolchain = config.toolchain
         self.__sources = config.sources
-        self.__name = self.__generate_name(
-            config.name, self.__sources[0].stem, config.input_
-        )
+        self.__name = self.__generate_name(config.name, self.__sources[0].stem)
         self.__build_dir = Path(".")
         self.__is_cleaning = config.is_cleaning
         self.__is_trampoline_present = self.__is_trampoline_present_now()
@@ -107,7 +105,7 @@ class MiniProject:
         if self.__input is not None:
             bench = d / "main.c"
             options = GenerationOptions.from_variables(
-                self.__input.vars,
+                list(self.__input.vars),
                 self.__input.iterations.warmup,
                 self.__input.iterations.main,
             )
@@ -159,6 +157,10 @@ class MiniProject:
     @property
     def toolchain(self) -> Toolchain:
         return self.__toolchain
+
+    @property
+    def benchmark_input(self) -> BenchmarkInput | None:
+        return self.__input
 
     @property
     def is_trampoline_present(self) -> bool:
@@ -217,22 +219,11 @@ class MiniProject:
             f"do not known how to compile {source}, .c/.ll/.S was expected"
         )
 
-    def __generate_name(
-        self, name: str | None, stem: str, input_: BenchmarkInput | None
-    ) -> str:
+    def __generate_name(self, name: str | None, stem: str) -> str:
         new_name = ""
         if name is not None:
             new_name = name
         else:
             return stem
 
-        if input_ is None:
-            return new_name
-
-        suffix = []
-
-        suffix.extend([input_.function.return_type, input_.function.name])
-        for var_ in input_.vars:
-            suffix.extend([var_.input_path.stem, var_.variable])
-
-        return new_name + "_" + "_".join(suffix)
+        return new_name
