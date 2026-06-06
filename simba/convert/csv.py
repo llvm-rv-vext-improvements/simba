@@ -114,7 +114,8 @@ def table_to_csv(table: Iterable[DiffBenchmarkRow]) -> str:
 
     # Data rows
     for row in table:
-        data_parts = [row.name, repr(row.config)]
+        config_str = row.config.to_csv_str() if row.config else ""
+        data_parts = [row.name, config_str]
 
         # Base measurement
         data_parts.extend(

@@ -201,6 +201,13 @@ class BenchmarkVar(NamedTuple):
         return BenchmarkVar(
             variable=raw.variable, type_=raw.type_, input_path=Path(raw.input_path)
         )
+    
+    def to_csv_str(self) -> str:
+        func_str = f"{self.function.name}({self.function.return_type})"
+        iter_str = f"{self.iterations.warmup}/{self.iterations.main}"
+        var_strs = [f"{v.variable}:{v.type_}:{v.input_path.name}" for v in self.vars]
+        vars_str = f"[{', '.join(var_strs)}]"
+        return f"{func_str} | iters={iter_str} | vars={vars_str}"
 
 
 class FunctionInput(NamedTuple):
@@ -227,7 +234,7 @@ class IterationsInput(NamedTuple):
 class BenchmarkInput(NamedTuple):
     function: FunctionInput
     iterations: IterationsInput
-    vars: Tuple[BenchmarkVar, ...]  # changed from List to Tuple
+    vars: Tuple[BenchmarkVar, ...]
 
     @classmethod
     def from_raw(cls, raw: RawBenchmarkInput) -> "BenchmarkInput":
@@ -236,7 +243,7 @@ class BenchmarkInput(NamedTuple):
             iterations=IterationsInput.from_raw(raw.iterations),
             vars=tuple(
                 BenchmarkVar.from_raw(var_) for var_ in raw.vars
-            ),  # convert to tuple
+            ),
         )
 
 
