@@ -263,7 +263,7 @@ class BenchmarkInput(NamedTuple):
         return BenchmarkInput(
             function=FunctionInput.from_raw(raw.function),
             iterations=IterationsInput.from_raw(raw.iterations),
-            vars=[BenchmarkVar.from_raw(var_) for var_ in raw.vars],
+            vars=tuple(BenchmarkVar.from_raw(var_) for var_ in raw.vars),
         )
 
 
