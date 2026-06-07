@@ -32,10 +32,14 @@ class RawReport(BaseModel):
     is_customly_trampolined: bool = False
 
     def to_pure(self) -> Report:
-        return Report(            
+        return Report(
             name=self.name,
             toolchain=Toolchain.from_raw(self.toolchain) if self.toolchain else None,
-            benchmark_config=BenchmarkInput.from_raw(self.benchmark_config) if self.benchmark_config else None,
+            benchmark_config=(
+                BenchmarkInput.from_raw(self.benchmark_config)
+                if self.benchmark_config
+                else None
+            ),
             instrunctions_count=self.instrunctions_count,
             cycles_count=self.cycles_count,
             simulation_time=timedelta(0),
