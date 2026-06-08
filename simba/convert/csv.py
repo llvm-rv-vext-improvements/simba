@@ -41,17 +41,17 @@ def reports_to_table(reports: List[Report]) -> Iterable[BenchmarkRow]:
         key = (report.name, report.benchmark_config)
         groups.setdefault(key, []).append(report)
 
-    for (name, config), rep_list in groups.items():
+    for (name, config), report_list in groups.items():
         measurements = []
-        for rep in rep_list:
-            if rep.toolchain is None:
-                raise ValueError(f"unexpected empty toolchain in report {rep.name}")
+        for report in report_list:
+            if report.toolchain is None:
+                raise ValueError(f"unexpected empty toolchain in report {report.name}")
             measurements.append(
                 Measurement(
-                    toolchain=rep.toolchain,
-                    instrs=rep.instrunctions_count,
-                    cycles=rep.cycles_count,
-                    is_customly_trampolined=rep.is_customly_trampolined,
+                    toolchain=report.toolchain,
+                    instrs=report.instrunctions_count,
+                    cycles=report.cycles_count,
+                    is_customly_trampolined=report.is_customly_trampolined,
                 )
             )
         yield BenchmarkRow(name=name, config=config, measurements=measurements)
