@@ -1,6 +1,6 @@
 from typing import List, NamedTuple
 
-from simba.args.input_data import BenchmarkVar
+from simba.args.benchmark_input import BenchmarkVar
 
 TEMPLATE = """//includes
     {}

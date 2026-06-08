@@ -3,7 +3,7 @@ from simba.make.miniproject import MiniProject
 from simba.run.task import Plan, Task
 from simba.verilator.core import Verilator
 from simba.args.miniproject_config import MiniProjectConfig
-from simba.args.input_data import get_test_inputs
+from simba.args.benchmark_input import get_test_inputs
 
 
 def plan_sources(

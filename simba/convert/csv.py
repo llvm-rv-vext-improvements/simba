@@ -2,7 +2,7 @@ from typing import Dict, Iterable, List, NamedTuple, Tuple, Optional
 
 from simba.args.toolchain import Toolchain
 from simba.run.report import Report
-from simba.args.input_data import BenchmarkInput
+from simba.args.benchmark_input import BenchmarkInput
 
 
 class Measurement(NamedTuple):

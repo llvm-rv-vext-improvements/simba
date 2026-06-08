@@ -5,10 +5,12 @@ from pydantic import BaseModel
 
 from simba.args.toolchain import RawToolchain, Toolchain
 from simba.args.input_data import (
-    BenchmarkInput,
-    RawBenchmarkInput,
     RawFunctionInfo,
     RawIterationsInfo,
+)
+from simba.args.benchmark_input import (
+    BenchmarkInput,
+    RawBenchmarkInput,
     RawBenchmarkVar,
 )
 
