@@ -2,9 +2,11 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import List
 
 from simba.args.toolchain import Toolchain
+from simba.args.miniproject_config import MiniProjectConfig
+from simba.args.benchmark_input import BenchmarkInput
+from simba.make.driver import generate_program, GenerationOptions
 
 SCRIPT_LD = """
 MEMORY {
@@ -65,19 +67,14 @@ _start:
 
 
 class MiniProject:
-    def __init__(
-        self,
-        toolchain: Toolchain,
-        sources: List[Path],
-        name: str | None,
-        is_cleaning: bool = True,
-    ) -> None:
-        self.__toolchain = toolchain
-        self.__sources = sources
-        self.__name = name or self.__sources[0].stem
+    def __init__(self, config: MiniProjectConfig) -> None:
+        self.__toolchain = config.toolchain
+        self.__sources = config.sources
+        self.__name = self.__generate_name(config.name, self.__sources[0].stem)
         self.__build_dir = Path(".")
-        self.__is_cleaning = is_cleaning
+        self.__is_cleaning = config.is_cleaning
         self.__is_trampoline_present = self.__is_trampoline_present_now()
+        self.__input = config.input_
 
     def __enter__(self) -> "MiniProject":
         self.__build_dir = Path(tempfile.mkdtemp())
@@ -86,7 +83,12 @@ class MiniProject:
         d = self.__build_dir
         d.mkdir(exist_ok=True)
 
-        for src in self.__sources:
+        input_files_to_copy = (
+            list(set(var_.input_path for var_ in self.__input.vars))
+            if self.__input is not None
+            else []
+        )
+        for src in self.__sources + input_files_to_copy:
             dst = d / src.name
             shutil.copyfile(src, dst)
 
@@ -99,6 +101,22 @@ class MiniProject:
             with open(trampoline, "w", encoding="utf-8") as f:
                 f.write(TRAMPOLINE)
             self.__sources.append(trampoline)
+
+        if self.__input is not None:
+            bench = d / "main.c"
+            options = GenerationOptions.from_variables(
+                list(self.__input.vars),
+                self.__input.iterations.warmup,
+                self.__input.iterations.main,
+            )
+            benchcode = generate_program(
+                function_name=self.__input.function.name,
+                function_return_type=self.__input.function.return_type,
+                options=options,
+            )
+            with open(bench, "w", encoding="utf-8") as f:
+                f.write(benchcode)
+            self.__sources.append(bench)
 
         makefile = d / "Makefile"
         with open(makefile, "w", encoding="utf-8") as f:
@@ -141,6 +159,10 @@ class MiniProject:
         return self.__toolchain
 
     @property
+    def benchmark_input(self) -> BenchmarkInput | None:
+        return self.__input
+
+    @property
     def is_trampoline_present(self) -> bool:
         return self.__is_trampoline_present
 
@@ -159,7 +181,8 @@ class MiniProject:
 
     @property
     def __makefile(self) -> str:
-        sources = [Path(f.name) for f in self.__sources]
+        # Do not compile .h files
+        sources = [Path(f.name) for f in self.__sources if f.suffix != ".h"]
         objects = [f"{f.stem}.o" for f in sources]
 
         cc = self.__toolchain.path / "bin" / self.__toolchain.cc
@@ -196,3 +219,6 @@ class MiniProject:
         raise ValueError(
             f"do not known how to compile {source}, .c/.ll/.S was expected"
         )
+
+    def __generate_name(self, name: str | None, stem: str) -> str:
+        return name or stem

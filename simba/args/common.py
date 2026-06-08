@@ -1,9 +1,10 @@
 from pathlib import Path
 from typing import List, NamedTuple
 
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 
 from simba.args.toolchain import RawToolchain, Toolchain, ToolchainMatrix
+from simba.args.parse_json import parse_json
 
 
 class RawCommonArgs(BaseModel):
@@ -18,17 +19,7 @@ class RawCommonArgs(BaseModel):
 
     @classmethod
     def read_json(cls, path: Path) -> "RawCommonArgs":
-        try:
-            with open(path, "r", encoding="utf-8") as f:
-                data = f.read()
-                return cls.model_validate_json(data)
-        except ValidationError as e:
-            message = ", ".join(
-                [f'{err["loc"][0]} {err["type"]}' for err in e.errors()]
-            )
-            raise ValueError(f"failed to parse config: {message}") from e
-        except Exception as e:
-            raise RuntimeError(f"failed to read config: {e}") from e
+        return parse_json(cls, path)
 
 
 class CommonArgs(NamedTuple):

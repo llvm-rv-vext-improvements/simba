@@ -12,6 +12,7 @@ def run_executable(verilator: Verilator, args: RunExecutableArgs) -> Report:
     return Report(
         name=args.path.name,
         toolchain=None,
+        benchmark_config=None,
         instrunctions_count=instrs,
         cycles_count=cycles,
         simulation_time=timer.duration,

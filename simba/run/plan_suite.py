@@ -12,6 +12,6 @@ def plan_suite(verilator: Verilator, args: TArgs[RunSuiteArgs]) -> Plan:
             verilator,
             TArgs(
                 common=args.common,
-                run=RunMiniprojectArgs(path=subdir),
+                run=RunMiniprojectArgs(path=subdir, input_data_config=None),
             ),
         )

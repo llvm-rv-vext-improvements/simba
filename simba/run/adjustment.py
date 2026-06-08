@@ -6,6 +6,7 @@ from simba.make.miniproject import MiniProject
 from simba.run.report import Report
 from simba.run.task import Plan, Task
 from simba.verilator.core import Verilator
+from simba.args.miniproject_config import MiniProjectConfig
 
 
 NOP_TASK_NAME = "__simba_nop"
@@ -38,14 +39,15 @@ def plan_nop(
     nop_file = generate_nop_file()
 
     for toolchain in toolchains:
+        config = MiniProjectConfig(
+            toolchain=toolchain,
+            sources=[nop_file],
+            name=NOP_TASK_NAME,
+            is_cleaning=False,
+        )
         yield Task(
             verilator=verilator,
-            project=MiniProject(
-                toolchain=toolchain,
-                sources=[nop_file],
-                name=NOP_TASK_NAME,
-                is_cleaning=False,
-            ),
+            project=MiniProject(config=config),
         )
 
 
@@ -66,6 +68,7 @@ def adjust_report(report: Report, nop: Report) -> Report:
     return Report(
         name=report.name,
         toolchain=report.toolchain,
+        benchmark_config=report.benchmark_config,
         instrunctions_count=report.instrunctions_count - nop.instrunctions_count,
         cycles_count=report.cycles_count - nop.cycles_count,
         simulation_time=report.simulation_time,
