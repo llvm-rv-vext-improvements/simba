@@ -181,7 +181,8 @@ class MiniProject:
 
     @property
     def __makefile(self) -> str:
-        sources = [Path(f.name) for f in self.__sources]
+        # Do not compile .h files
+        sources = [Path(f.name) for f in self.__sources if f.suffix != ".h"]
         objects = [f"{f.stem}.o" for f in sources]
 
         cc = self.__toolchain.path / "bin" / self.__toolchain.cc
@@ -213,7 +214,7 @@ class MiniProject:
         def is_a(ext: str):
             return source.suffix == ext
 
-        if is_a(".c") or is_a(".ll") or is_a(".S") or is_a(".h"):
+        if is_a(".c") or is_a(".ll") or is_a(".S"):
             return f"$(CC) $(CFLAGS) -c {source} -o {source.stem}.o"
         raise ValueError(
             f"do not known how to compile {source}, .c/.ll/.S was expected"
