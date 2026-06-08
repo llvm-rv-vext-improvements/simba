@@ -18,7 +18,6 @@ class RawInputFile(BaseModel):
     @field_validator("input_file")
     @classmethod
     def input_file_must_be_h_ext(cls, v: FilePath) -> FilePath:
-        # Check if the string ends with specific substring
         if v.suffix != (".h"):
             raise ValueError("Input files should be .h files")
         return v
