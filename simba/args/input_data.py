@@ -50,8 +50,6 @@ class RawInputDataConfig(BaseModel):
 
     @classmethod
     def read_json(cls, path: Path) -> "RawInputDataConfig":
-        if not path.exists() or path.is_dir():
-            raise ValueError("Path either does not exist or is directory")
         return parse_json(cls, path)
 
 
