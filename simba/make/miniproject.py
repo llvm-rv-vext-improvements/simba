@@ -220,10 +220,4 @@ class MiniProject:
         )
 
     def __generate_name(self, name: str | None, stem: str) -> str:
-        new_name = ""
-        if name is not None:
-            new_name = name
-        else:
-            return stem
-
-        return new_name
+        return name or stem
