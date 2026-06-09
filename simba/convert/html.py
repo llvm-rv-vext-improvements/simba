@@ -281,8 +281,28 @@ def table_to_html(table: Iterable[DiffBenchmarkRow]) -> str:
             "<p><em>Note: Italicized benchmark names indicate "
             "custom trampoline configuration.</em></p>"
         )
+        html_parts.append(_build_config_legend())
 
     html_parts.append(f"<script>{js}</script>")
     html_parts.append("</body></html>")
 
     return "\n".join(html_parts)
+
+
+def _build_config_legend() -> str:
+    """Return HTML for the configuration format legend."""
+    return """
+        <div style="
+            margin-top: 1em;
+            padding: 1em;
+            background-color: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+            font-size: 0.85em;
+        ">
+            <strong>📋 Benchmark Config Format:</strong>
+            <code>function_name(return_type) | iters=warmup/main | vars=[var:type:file, ...]</code>
+            <br>
+            Example: <code>abc(void) | iters=5/15 | vars=[a:int:input1.h, b:bool*:input1.h]</code>
+            means warmup iterations = 5, main iterations = 15.
+        </div>
+    """
