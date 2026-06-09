@@ -59,7 +59,10 @@ class BenchmarkInput(NamedTuple):
 
     def to_csv_str(self) -> str:
         func_str = f"{self.function.name}({self.function.return_type})"
-        iter_str = f"{self.iterations.warmup}/{self.iterations.main}"
+        # Main execution of function either in loop
+        #       (then iterations.main holds number of iterations)
+        #   or just one execution (if there is no loop for main iteration at all)
+        iter_str = f"{self.iterations.warmup}/{self.iterations.main or 1}"
         var_strs = [f"{v.variable}:{v.var_type}:{v.input_path.name}" for v in self.vars]
         vars_str = f"[{', '.join(var_strs)}]"
         return f"{func_str} | iters={iter_str} | vars={vars_str}"
