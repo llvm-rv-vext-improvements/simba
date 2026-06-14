@@ -120,7 +120,7 @@ class Args(NamedTuple):
         common_args = RawCommonArgs.read_json(RawCommonArgs.resolve_path())
         if args.verbose:
             common_args.is_verbose = True
-        if args.show_generated_benchmark:
+        if hasattr(args, "show_generated_benchmark") and args.show_generated_benchmark:
             common_args.show_benchmark = True
         common = CommonArgs.from_raw(common_args)
 
