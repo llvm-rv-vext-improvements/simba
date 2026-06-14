@@ -22,6 +22,7 @@ def plan_sources(
                 name=name,
                 is_cleaning=False,
                 input_=input_,
+                show_benchmark=args.common.show_benchmark,
             )
             yield Task(
                 verilator=verilator,

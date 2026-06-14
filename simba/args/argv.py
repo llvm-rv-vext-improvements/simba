@@ -97,6 +97,13 @@ class Args(NamedTuple):
             required=False,
             help="Path to input config file for tests",
         )
+        run_parser.add_argument(
+            "--show-generated-benchmark",
+            default=False,
+            required=False,
+            action="store_true",
+            help="Outputs each generated benchmark to stdin",
+        )
 
         convert_parser = subparsers.add_parser(
             "convert",
@@ -113,6 +120,8 @@ class Args(NamedTuple):
         common_args = RawCommonArgs.read_json(RawCommonArgs.resolve_path())
         if args.verbose:
             common_args.is_verbose = True
+        if args.show_generated_benchmark:
+            common_args.show_benchmark = True
         common = CommonArgs.from_raw(common_args)
 
         if args.command == "run":

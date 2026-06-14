@@ -12,6 +12,7 @@ class RawCommonArgs(BaseModel):
     toolchain_base: RawToolchain = RawToolchain()
     toolchain_extra: List[RawToolchain] = []
     is_verbose: bool = False
+    show_benchmark: bool = False
 
     @classmethod
     def resolve_path(cls) -> Path:
@@ -26,6 +27,7 @@ class CommonArgs(NamedTuple):
     verilator_path: Path
     toolchains: ToolchainMatrix
     is_verbose: bool
+    show_benchmark: bool
 
     @classmethod
     def from_raw(cls, raw: RawCommonArgs) -> "CommonArgs":
@@ -45,4 +47,5 @@ class CommonArgs(NamedTuple):
             verilator_path=raw.verilator_path,
             toolchains=toolchains,
             is_verbose=raw.is_verbose,
+            show_benchmark=raw.show_benchmark,
         )

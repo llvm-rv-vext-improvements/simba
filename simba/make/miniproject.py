@@ -2,6 +2,7 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
+from typing import NamedTuple
 
 from simba.args.toolchain import Toolchain
 from simba.args.miniproject_config import MiniProjectConfig
@@ -66,6 +67,11 @@ _start:
 """
 
 
+class BenchmarkConfig(NamedTuple):
+    input_: BenchmarkInput
+    show_benchmark: bool
+
+
 class MiniProject:
     def __init__(self, config: MiniProjectConfig) -> None:
         self.__toolchain = config.toolchain
@@ -74,7 +80,12 @@ class MiniProject:
         self.__build_dir = Path(".")
         self.__is_cleaning = config.is_cleaning
         self.__is_trampoline_present = self.__is_trampoline_present_now()
-        self.__input = config.input_
+
+        self.__benchmark_config = (
+            BenchmarkConfig(input_=config.input_, show_benchmark=config.show_benchmark)
+            if config.input_
+            else None
+        )
 
     def __enter__(self) -> "MiniProject":
         self.__build_dir = Path(tempfile.mkdtemp())
@@ -84,8 +95,8 @@ class MiniProject:
         d.mkdir(exist_ok=True)
 
         input_files_to_copy = (
-            list(set(var_.input_path for var_ in self.__input.vars))
-            if self.__input is not None
+            list(set(var_.input_path for var_ in self.__benchmark_config.input_.vars))
+            if self.__benchmark_config
             else []
         )
         for src in self.__sources + input_files_to_copy:
@@ -102,21 +113,25 @@ class MiniProject:
                 f.write(TRAMPOLINE)
             self.__sources.append(trampoline)
 
-        if self.__input is not None:
+        if self.__benchmark_config is not None:
+            input_ = self.__benchmark_config.input_
             bench = d / "main.c"
             options = GenerationOptions.from_variables(
-                list(self.__input.vars),
-                self.__input.iterations.warmup,
-                self.__input.iterations.main,
+                list(input_.vars),
+                input_.iterations.warmup,
+                input_.iterations.main,
             )
             benchcode = generate_program(
-                function_name=self.__input.function.name,
-                function_return_type=self.__input.function.return_type,
+                function_name=input_.function.name,
+                function_return_type=input_.function.return_type,
                 options=options,
             )
             with open(bench, "w", encoding="utf-8") as f:
                 f.write(benchcode)
             self.__sources.append(bench)
+
+            if self.__benchmark_config.show_benchmark:
+                print(benchcode)
 
         makefile = d / "Makefile"
         with open(makefile, "w", encoding="utf-8") as f:
@@ -160,7 +175,7 @@ class MiniProject:
 
     @property
     def benchmark_input(self) -> BenchmarkInput | None:
-        return self.__input
+        return self.__benchmark_config.input_ if self.__benchmark_config else None
 
     @property
     def is_trampoline_present(self) -> bool:

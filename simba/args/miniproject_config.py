@@ -11,3 +11,4 @@ class MiniProjectConfig(NamedTuple):
     name: str | None
     is_cleaning: bool
     input_: BenchmarkInput | None = None
+    show_benchmark: bool = False
