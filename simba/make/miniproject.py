@@ -8,6 +8,7 @@ from simba.args.toolchain import Toolchain
 from simba.args.miniproject_config import MiniProjectConfig
 from simba.args.benchmark_input import BenchmarkInput
 from simba.make.driver import generate_program, GenerationOptions
+from simba.log import loggy
 
 SCRIPT_LD = """
 MEMORY {
@@ -131,7 +132,7 @@ class MiniProject:
             self.__sources.append(bench)
 
             if self.__benchmark_config.show_benchmark:
-                print(benchcode)
+                loggy.info("Generated benchmark:\n%s", benchcode)
 
         makefile = d / "Makefile"
         with open(makefile, "w", encoding="utf-8") as f:
