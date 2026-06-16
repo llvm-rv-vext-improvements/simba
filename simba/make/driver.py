@@ -2,41 +2,35 @@ from typing import List, NamedTuple
 
 from simba.args.benchmark_input import BenchmarkVar
 
+DO_NOT_OPTIMIZE_MACRO = (
+    '#define DO_NOT_OPTIMIZE(var) asm volatile("" : "+r,m"(var) : : "memory")'
+)
+
 TEMPLATE = """//includes
-    {}
-    // extern function
-    {}
+    {includes}
+    {do_not_optimize}
+    // extern functions
+    {extern_decls}
     // ==========
     int main() {{
         // loop
-        {}
+        {loops}
     }}
     """
 
 
-WARMUP_LOOP = """
-        // Warmup iterations
-        for (int i = 0; i < {}; i++) {{
-            // Function call
-            {}
-        }}
-    """
+STUB_FUNCTION = (
+    "__attribute__((noinline)) __attribute__((noipa))\n"
+    "{return_type} {name}({params}) {{}}\n"
+)
 
-BENCH_LOOP = """
-        // Bench iterations
-        for (int i = 0; i < {}; i++) {{
-            // Function call
-            {}
-        }}
-    """
-
-WITHOUT_LOOP = "{} // Function call"
+STUB_INCLUDES = "#include <stdbool.h>\n#include <stdint.h>\n#include <stddef.h>\n"
 
 INCLUDE = '#include "{}"\n'
 
 FUNCTION_CALL = "{}({});"
 
-EXTERN_FUNCTION = "extern {} {}({});"
+EXTERN_FUNCTION = "extern __attribute__((noinline)) __attribute__((noipa)) {} {}({});"
 ARG_TEMPLATE = "{} {}"
 
 
@@ -59,19 +53,42 @@ def get_extern_function(
     return EXTERN_FUNCTION.format(function_return_type, function_name, ",".join(args))
 
 
+def get_call_block(function_call_str: str, var_names: list[str]) -> str:
+    parts = []
+    parts += [f"DO_NOT_OPTIMIZE({var});" for var in var_names]
+    parts.append(function_call_str)
+    parts += [f"DO_NOT_OPTIMIZE({var});" for var in var_names]
+    return "\n        ".join(parts)
+
+
+def get_paired_call_block(
+    prefix_call_str: str, main_call_str: str, var_names: list[str]
+) -> str:
+    parts = []
+    parts += [f"DO_NOT_OPTIMIZE({var});" for var in var_names]
+    parts.append(prefix_call_str)
+    parts.append(main_call_str)
+    parts += [f"DO_NOT_OPTIMIZE({var});" for var in var_names]
+    return "\n        ".join(parts)
+
+
 def get_loops(
     function_call_str: str,
     warmup_iterations: int | None,
     main_iterations: int | None,
 ) -> str:
-    loop_str = ""
+    sep = "\n        "
+    result = ""
+
     if warmup_iterations is not None and warmup_iterations != 0:
-        loop_str += WARMUP_LOOP.format(warmup_iterations, function_call_str)
+        copies = sep.join([function_call_str] * warmup_iterations)
+        result += f"\n        // Warmup iterations\n        {copies}\n    "
+
     if main_iterations is not None and main_iterations != 0:
-        loop_str += BENCH_LOOP.format(main_iterations, function_call_str)
-    else:
-        loop_str += WITHOUT_LOOP.format(function_call_str)
-    return loop_str
+        copies = sep.join([function_call_str] * main_iterations)
+        result += f"\n        // Bench iterations\n        {copies}\n    "
+
+    return result
 
 
 class GenerationOptions(NamedTuple):
@@ -79,12 +96,14 @@ class GenerationOptions(NamedTuple):
     input_filenames: list[str]
     warmup_iterations: int = 0
     main_iterations: int = 0
+    prefix_function_name: str | None = None
 
     @staticmethod
     def from_variables(
         variables: List[BenchmarkVar],
         warmup_iterations: int = 0,
         main_iterations: int = 0,
+        prefix_function_name: str | None = None,
     ) -> "GenerationOptions":
         new_vars = []
         new_input_files = set()
@@ -98,7 +117,21 @@ class GenerationOptions(NamedTuple):
             input_filenames=list(new_input_files),
             warmup_iterations=warmup_iterations,
             main_iterations=main_iterations,
+            prefix_function_name=prefix_function_name,
         )
+
+
+def generate_stub(
+    function_name: str,
+    function_return_type: str,
+    variables: list[tuple[str, str]],
+) -> str:
+    stub_name = f"simba_stub_{function_name}"
+    params = ", ".join(f"{type_} {var_}" for var_, type_ in variables) or "void"
+    body = STUB_FUNCTION.format(
+        return_type=function_return_type, name=stub_name, params=params
+    )
+    return f"{STUB_INCLUDES}\n{body}"
 
 
 def generate_program(
@@ -107,20 +140,36 @@ def generate_program(
     function_return_type: str = "void",
 ) -> str:
     includes = get_includes(options.input_filenames)
-    extern_func_str = get_extern_function(
-        function_name, function_return_type, options.variables
-    )
-    function_call_str = get_function_call(
-        function_name, [var_ for (var_, _) in options.variables or []]
-    )
-    loops = get_loops(
-        function_call_str,
-        options.warmup_iterations,
-        options.main_iterations,
-    )
+    var_names = [var_ for (var_, _) in options.variables]
+
+    if options.prefix_function_name:
+        extern_prefix = get_extern_function(
+            options.prefix_function_name, function_return_type, options.variables
+        )
+        extern_main = get_extern_function(
+            function_name, function_return_type, options.variables
+        )
+        extern_decls = f"{extern_prefix}\n    {extern_main}"
+        call_str = get_paired_call_block(
+            get_function_call(options.prefix_function_name, var_names),
+            get_function_call(function_name, var_names),
+            var_names,
+        )
+    else:
+        extern_decls = get_extern_function(
+            function_name, function_return_type, options.variables
+        )
+        call_str = get_call_block(
+            get_function_call(function_name, var_names), var_names
+        )
+
+    do_not_optimize = DO_NOT_OPTIMIZE_MACRO if var_names else ""
+
+    loops = get_loops(call_str, options.warmup_iterations, options.main_iterations)
 
     return TEMPLATE.format(
-        includes,
-        extern_func_str,
-        loops,
+        includes=includes,
+        do_not_optimize=do_not_optimize,
+        extern_decls=extern_decls,
+        loops=loops,
     )

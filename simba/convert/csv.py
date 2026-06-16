@@ -1,7 +1,7 @@
 from typing import Dict, Iterable, List, NamedTuple, Tuple, Optional
 
 from simba.args.toolchain import Toolchain
-from simba.run.report import Report
+from simba.run.report import Report, ReportDetails
 from simba.args.benchmark_input import BenchmarkInput
 
 
@@ -10,6 +10,7 @@ class Measurement(NamedTuple):
     instrs: int
     cycles: int
     is_customly_trampolined: bool
+    details: ReportDetails | None = None
 
 
 class BenchmarkRow(NamedTuple):
@@ -26,6 +27,7 @@ class DiffMeasurement(NamedTuple):
     cycles: int
     cycles_diff_abs: int
     cycles_diff_rel: float
+    details: ReportDetails | None = None
 
 
 class DiffBenchmarkRow(NamedTuple):
@@ -43,15 +45,20 @@ def reports_to_table(reports: List[Report]) -> Iterable[BenchmarkRow]:
 
     for (name, config), report_list in groups.items():
         measurements = []
+        seen_toolchains = set()
         for report in report_list:
             if report.toolchain is None:
                 raise ValueError(f"unexpected empty toolchain in report {report.name}")
+            if report.toolchain in seen_toolchains:
+                continue
+            seen_toolchains.add(report.toolchain)
             measurements.append(
                 Measurement(
                     toolchain=report.toolchain,
                     instrs=report.instrunctions_count,
                     cycles=report.cycles_count,
                     is_customly_trampolined=report.is_customly_trampolined,
+                    details=report.details,
                 )
             )
         yield BenchmarkRow(name=name, config=config, measurements=measurements)
@@ -78,6 +85,7 @@ def table_to_diff(table: Iterable[BenchmarkRow]) -> Iterable[DiffBenchmarkRow]:
                     cycles=m.cycles,
                     cycles_diff_abs=m.cycles - base.cycles,
                     cycles_diff_rel=div(m.cycles - base.cycles, base.cycles),
+                    details=m.details,
                 )
                 for m in row.measurements[1:]
             ],

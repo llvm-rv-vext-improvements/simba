@@ -15,6 +15,21 @@ from simba.args.benchmark_input import (
 )
 
 
+class AdjustmentCounts(NamedTuple):
+    total: int
+    warmup: int
+    main: int
+
+
+class Adjustment(NamedTuple):
+    instrs: AdjustmentCounts
+    cycles: AdjustmentCounts
+
+
+class ReportDetails(NamedTuple):
+    adjustment: Adjustment
+
+
 class Report(NamedTuple):
     name: str
     toolchain: Toolchain | None
@@ -23,6 +38,22 @@ class Report(NamedTuple):
     cycles_count: int
     simulation_time: timedelta
     is_customly_trampolined: bool
+    details: ReportDetails | None = None
+
+
+class RawAdjustmentCounts(BaseModel):
+    total: int
+    warmup: int
+    main: int
+
+
+class RawAdjustment(BaseModel):
+    instrs: RawAdjustmentCounts
+    cycles: RawAdjustmentCounts
+
+
+class RawReportDetails(BaseModel):
+    adjustment: RawAdjustment
 
 
 class RawReport(BaseModel):
@@ -32,8 +63,26 @@ class RawReport(BaseModel):
     instrunctions_count: int
     cycles_count: int
     is_customly_trampolined: bool = False
+    details: RawReportDetails | None = None
 
     def to_pure(self) -> Report:
+        details = None
+        if self.details:
+            adj = self.details.adjustment
+            details = ReportDetails(
+                adjustment=Adjustment(
+                    instrs=AdjustmentCounts(
+                        total=adj.instrs.total,
+                        warmup=adj.instrs.warmup,
+                        main=adj.instrs.main,
+                    ),
+                    cycles=AdjustmentCounts(
+                        total=adj.cycles.total,
+                        warmup=adj.cycles.warmup,
+                        main=adj.cycles.main,
+                    ),
+                )
+            )
         return Report(
             name=self.name,
             toolchain=Toolchain.from_raw(self.toolchain) if self.toolchain else None,
@@ -46,6 +95,7 @@ class RawReport(BaseModel):
             cycles_count=self.cycles_count,
             simulation_time=timedelta(0),
             is_customly_trampolined=self.is_customly_trampolined,
+            details=details,
         )
 
     @classmethod
@@ -79,6 +129,24 @@ class RawReport(BaseModel):
                 ],
             )
 
+        raw_details = None
+        if pure.details:
+            adj = pure.details.adjustment
+            raw_details = RawReportDetails(
+                adjustment=RawAdjustment(
+                    instrs=RawAdjustmentCounts(
+                        total=adj.instrs.total,
+                        warmup=adj.instrs.warmup,
+                        main=adj.instrs.main,
+                    ),
+                    cycles=RawAdjustmentCounts(
+                        total=adj.cycles.total,
+                        warmup=adj.cycles.warmup,
+                        main=adj.cycles.main,
+                    ),
+                )
+            )
+
         return RawReport(
             name=pure.name,
             toolchain=raw_toolchain,
@@ -86,4 +154,5 @@ class RawReport(BaseModel):
             instrunctions_count=pure.instrunctions_count,
             cycles_count=pure.cycles_count,
             is_customly_trampolined=pure.is_customly_trampolined,
+            details=raw_details,
         )

@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Iterable, List
 
 from simba.convert.csv import DiffBenchmarkRow
+from simba.run.report import AdjustmentCounts, ReportDetails
 
 
 def _build_css(
@@ -116,6 +117,26 @@ def _build_js() -> str:
     """
 
 
+def _adjustment_title(counts: AdjustmentCounts) -> str:
+    return (
+        f"total: {counts.total:,} | warmup: {counts.warmup:,} | main: {counts.main:,}"
+    )
+
+
+def _instrs_td(value: int, details: ReportDetails | None) -> str:
+    title = (
+        f' title="{_adjustment_title(details.adjustment.instrs)}"' if details else ""
+    )
+    return f"<td{title}>{value:,}</td>"
+
+
+def _cycles_td(value: int, details: ReportDetails | None) -> str:
+    title = (
+        f' title="{_adjustment_title(details.adjustment.cycles)}"' if details else ""
+    )
+    return f"<td{title}>{value:,}</td>"
+
+
 def _build_header(max_diffs: int) -> str:
     """Build the table header row as an HTML string."""
     parts = [
@@ -163,8 +184,8 @@ def _build_row(
     # Base measurement
     base_letter = toolchain_map.get(row.base.toolchain, "?")
     parts.append(f'<td class="tc-{base_letter}">{base_letter}</td>')
-    parts.append(f"<td>{row.base.instrs:,}</td>")
-    parts.append(f"<td>{row.base.cycles:,}</td>")
+    parts.append(_instrs_td(row.base.instrs, row.base.details))
+    parts.append(_cycles_td(row.base.cycles, row.base.details))
 
     # Diff measurements
     for diff in row.diffs:
@@ -178,7 +199,7 @@ def _build_row(
 
         diff_letter = toolchain_map.get(diff.toolchain, "?")
         parts.append(f'<td class="tc-{diff_letter}">{diff_letter}</td>')
-        parts.append(f"<td>{diff.instrs:,}</td>")
+        parts.append(_instrs_td(diff.instrs, diff.details))
         parts.append(
             f'<td class="{diff_class(diff.instrs_diff_abs)}">{diff.instrs_diff_abs:+,}</td>'
         )
@@ -186,7 +207,7 @@ def _build_row(
             f'<td class="{diff_class(diff.instrs_diff_rel)}" '
             f'data-sort-value="{diff.instrs_diff_rel}">{diff.instrs_diff_rel:+.2%}</td>'
         )
-        parts.append(f"<td>{diff.cycles:,}</td>")
+        parts.append(_cycles_td(diff.cycles, diff.details))
         parts.append(
             f'<td class="{diff_class(diff.cycles_diff_abs)}">{diff.cycles_diff_abs:+,}</td>'
         )

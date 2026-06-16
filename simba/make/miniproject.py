@@ -6,7 +6,7 @@ from pathlib import Path
 from simba.args.toolchain import Toolchain
 from simba.args.miniproject_config import MiniProjectConfig
 from simba.args.benchmark_input import BenchmarkInput
-from simba.make.driver import generate_program, GenerationOptions
+from simba.make.driver import generate_program, generate_stub, GenerationOptions
 
 SCRIPT_LD = """
 MEMORY {
@@ -66,7 +66,7 @@ _start:
 """
 
 
-class MiniProject:
+class MiniProject:  # pylint: disable=too-many-instance-attributes
     def __init__(self, config: MiniProjectConfig) -> None:
         self.__toolchain = config.toolchain
         self.__sources = config.sources
@@ -75,6 +75,7 @@ class MiniProject:
         self.__is_cleaning = config.is_cleaning
         self.__is_trampoline_present = self.__is_trampoline_present_now()
         self.__input = config.input_
+        self.__is_adjustment = config.is_adjustment
 
     def __enter__(self) -> "MiniProject":
         self.__build_dir = Path(tempfile.mkdtemp())
@@ -103,26 +104,45 @@ class MiniProject:
             self.__sources.append(trampoline)
 
         if self.__input is not None:
-            bench = d / "main.c"
+            stub_name = f"simba_stub_{self.__input.function.name}"
+            func_name = (
+                stub_name if self.__is_adjustment else self.__input.function.name
+            )
             options = GenerationOptions.from_variables(
                 list(self.__input.vars),
                 self.__input.iterations.warmup,
                 self.__input.iterations.main,
+                prefix_function_name=None if self.__is_adjustment else stub_name,
             )
-            benchcode = generate_program(
-                function_name=self.__input.function.name,
-                function_return_type=self.__input.function.return_type,
-                options=options,
-            )
+            bench = d / "main.c"
             with open(bench, "w", encoding="utf-8") as f:
-                f.write(benchcode)
+                f.write(
+                    generate_program(
+                        function_name=func_name,
+                        function_return_type=self.__input.function.return_type,
+                        options=options,
+                    )
+                )
             self.__sources.append(bench)
+            self.__sources.append(self.__write_stub(d, stub_name))
 
         makefile = d / "Makefile"
         with open(makefile, "w", encoding="utf-8") as f:
             f.write(self.__makefile)
 
         return self
+
+    def __write_stub(self, build_dir: Path, stub_name: str) -> Path:
+        assert self.__input is not None
+        stub_code = generate_stub(
+            function_name=self.__input.function.name,
+            function_return_type=self.__input.function.return_type,
+            variables=[(v.variable, v.var_type) for v in self.__input.vars],
+        )
+        stub_file = build_dir / f"{stub_name}.c"
+        with open(stub_file, "w", encoding="utf-8") as f:
+            f.write(stub_code)
+        return stub_file
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         if self.__is_cleaning:
