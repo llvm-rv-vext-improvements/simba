@@ -1,5 +1,6 @@
 from typing import Iterable, NamedTuple
 
+from simba.args.benchmark_input import BenchmarkInput
 from simba.log import loggy
 from simba.make.miniproject import MiniProject
 from simba.run.report import Report
@@ -10,6 +11,7 @@ from simba.verilator.core import Verilator
 class Task(NamedTuple):
     verilator: Verilator
     project: MiniProject
+    report_config: BenchmarkInput | None = None
 
 
 Plan = Iterable[Task]
@@ -19,7 +21,7 @@ def execute_task(task: Task) -> Report:
     with task.project as p:
         p.build()
 
-        loggy.info("Running %s...", p.executable_path)
+        loggy.info("Running %s using %s...", p.executable_path, repr(p.toolchain))
 
         timer = Stopwatch()
         with timer:
@@ -37,7 +39,11 @@ def execute_task(task: Task) -> Report:
         return Report(
             name=p.name,
             toolchain=p.toolchain,
-            benchmark_config=p.benchmark_input,
+            benchmark_config=(
+                task.report_config
+                if task.report_config is not None
+                else p.benchmark_input
+            ),
             instrunctions_count=instrs,
             cycles_count=cycles,
             simulation_time=timer.duration,

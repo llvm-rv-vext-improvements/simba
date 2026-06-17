@@ -34,7 +34,7 @@ class RawFunctionInfo(BaseModel):
 
 class RawIterationsInfo(BaseModel):
     warmup: int = 0
-    main: int = 0
+    main: int = 1
 
 
 class RawTestCase(BaseModel):
@@ -102,7 +102,7 @@ class FunctionInfo(NamedTuple):
 
 class IterationsInfo(NamedTuple):
     warmup: int = 0
-    main: int = 0
+    main: int = 1
 
     @classmethod
     def from_raw(cls, raw: RawIterationsInfo) -> "IterationsInfo":

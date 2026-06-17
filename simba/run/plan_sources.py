@@ -1,5 +1,6 @@
 from simba.args.argv import RunSourcesArgs, TArgs
 from simba.make.miniproject import MiniProject
+from simba.run.adjustment import plan_warmup
 from simba.run.task import Plan, Task
 from simba.verilator.core import Verilator
 from simba.args.miniproject_config import MiniProjectConfig
@@ -23,7 +24,7 @@ def plan_sources(
                 is_cleaning=False,
                 input_=input_,
             )
-            yield Task(
-                verilator=verilator,
-                project=MiniProject(config=config),
-            )
+            project = MiniProject(config=config)
+
+            yield from plan_warmup(verilator, project, list(args.run.paths))
+            yield Task(verilator=verilator, project=project)
