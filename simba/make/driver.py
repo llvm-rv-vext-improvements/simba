@@ -20,10 +20,7 @@ TEMPLATE = """//includes
 
 
 STUB_FUNCTION = (
-    "__attribute__((noinline))\n"
-    "{return_type} {name}({params}) {{\n"
-    "{dno}\n"
-    "}}\n"
+    "__attribute__((noinline))\n" "{return_type} {name}({params}) {{\n" "{dno}\n" "}}\n"
 )
 
 STUB_INCLUDES = (
