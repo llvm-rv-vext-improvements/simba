@@ -73,7 +73,8 @@ def get_paired_call_block(
 
 
 def get_loops(
-    function_call_str: str,
+    warmup_call_str: str,
+    main_call_str: str,
     warmup_iterations: int | None,
     main_iterations: int | None,
 ) -> str:
@@ -81,11 +82,11 @@ def get_loops(
     result = ""
 
     if warmup_iterations is not None and warmup_iterations != 0:
-        copies = sep.join([function_call_str] * warmup_iterations)
+        copies = sep.join([warmup_call_str] * warmup_iterations)
         result += f"\n        // Warmup iterations\n        {copies}\n    "
 
     if main_iterations is not None and main_iterations != 0:
-        copies = sep.join([function_call_str] * main_iterations)
+        copies = sep.join([main_call_str] * main_iterations)
         result += f"\n        // Bench iterations\n        {copies}\n    "
 
     return result
@@ -97,6 +98,7 @@ class GenerationOptions(NamedTuple):
     warmup_iterations: int = 0
     main_iterations: int = 0
     prefix_function_name: str | None = None
+    is_adjustment: bool = False
 
     @staticmethod
     def from_variables(
@@ -104,6 +106,7 @@ class GenerationOptions(NamedTuple):
         warmup_iterations: int = 0,
         main_iterations: int = 0,
         prefix_function_name: str | None = None,
+        is_adjustment: bool = False,
     ) -> "GenerationOptions":
         new_vars = []
         new_input_files = set()
@@ -118,6 +121,7 @@ class GenerationOptions(NamedTuple):
             warmup_iterations=warmup_iterations,
             main_iterations=main_iterations,
             prefix_function_name=prefix_function_name,
+            is_adjustment=is_adjustment,
         )
 
 
@@ -142,30 +146,36 @@ def generate_program(
     includes = get_includes(options.input_filenames)
     var_names = [var_ for (var_, _) in options.variables]
 
-    if options.prefix_function_name:
-        extern_prefix = get_extern_function(
-            options.prefix_function_name, function_return_type, options.variables
-        )
-        extern_main = get_extern_function(
-            function_name, function_return_type, options.variables
-        )
-        extern_decls = f"{extern_prefix}\n    {extern_main}"
-        call_str = get_paired_call_block(
-            get_function_call(options.prefix_function_name, var_names),
-            get_function_call(function_name, var_names),
-            var_names,
-        )
-    else:
-        extern_decls = get_extern_function(
-            function_name, function_return_type, options.variables
-        )
-        call_str = get_call_block(
-            get_function_call(function_name, var_names), var_names
-        )
+    assert options.prefix_function_name
+    stub_name = options.prefix_function_name
+
+    extern_prefix = get_extern_function(
+        stub_name, function_return_type, options.variables
+    )
+    extern_main = get_extern_function(
+        function_name, function_return_type, options.variables
+    )
+    extern_decls = f"{extern_prefix}\n    {extern_main}"
+
+    warmup_str = get_paired_call_block(
+        get_function_call(stub_name, var_names),
+        get_function_call(function_name, var_names),
+        var_names,
+    )
+
+    main_str = get_paired_call_block(
+        get_function_call(options.prefix_function_name, var_names),
+        get_function_call(
+            function_name if not options.is_adjustment else stub_name, var_names
+        ),
+        var_names,
+    )
 
     do_not_optimize = DO_NOT_OPTIMIZE_MACRO if var_names else ""
 
-    loops = get_loops(call_str, options.warmup_iterations, options.main_iterations)
+    loops = get_loops(
+        warmup_str, main_str, options.warmup_iterations, options.main_iterations
+    )
 
     return TEMPLATE.format(
         includes=includes,
