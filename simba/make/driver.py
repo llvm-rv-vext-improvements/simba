@@ -12,7 +12,7 @@ TEMPLATE = """//includes
     // extern functions
     {extern_decls}
     // ==========
-    int main() {{
+    __attribute__((optnone)) int main() {{
         // loop
         {loops}
     }}
@@ -20,11 +20,18 @@ TEMPLATE = """//includes
 
 
 STUB_FUNCTION = (
-    "__attribute__((noinline)) __attribute__((noipa))\n"
-    "{return_type} {name}({params}) {{}}\n"
+    "__attribute__((noinline))\n"
+    "{return_type} {name}({params}) {{\n"
+    "{dno}\n"
+    "}}\n"
 )
 
-STUB_INCLUDES = "#include <stdbool.h>\n#include <stdint.h>\n#include <stddef.h>\n"
+STUB_INCLUDES = (
+    "#include <stdbool.h>\n"
+    "#include <stdint.h>\n"
+    "#include <stddef.h>\n"
+    '#define DO_NOT_OPTIMIZE(var) asm volatile("" : "+r,m"(var) : : "memory")\n'
+)
 
 INCLUDE = '#include "{}"\n'
 
@@ -132,8 +139,13 @@ def generate_stub(
 ) -> str:
     stub_name = f"simba_stub_{function_name}"
     params = ", ".join(f"{type_} {var_}" for var_, type_ in variables) or "void"
+    dno = ""
+    # dno = "\n".join(f"DO_NOT_OPTIMIZE({var_});" for var_, _ in variables) + "\n"
     body = STUB_FUNCTION.format(
-        return_type=function_return_type, name=stub_name, params=params
+        return_type=function_return_type,
+        name=stub_name,
+        params=params,
+        dno=dno,
     )
     return f"{STUB_INCLUDES}\n{body}"
 
