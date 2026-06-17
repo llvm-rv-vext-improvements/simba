@@ -105,9 +105,7 @@ class MiniProject:  # pylint: disable=too-many-instance-attributes
 
         if self.__input is not None:
             stub_name = f"simba_stub_{self.__input.function.name}"
-            func_name = (
-                stub_name if self.__is_adjustment else self.__input.function.name
-            )
+            func_name = stub_name
             options = GenerationOptions.from_variables(
                 list(self.__input.vars),
                 self.__input.iterations.warmup,
