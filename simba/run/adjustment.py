@@ -139,12 +139,11 @@ def adjust_warmup(report: Report, warmup: Report) -> Report:
     assert report.toolchain == warmup.toolchain
 
     iters = report.benchmark_config.iterations  # type: ignore[union-attr]
-    total_iters = iters.warmup + iters.main
 
     adjusted_instrs = (
         report.instrunctions_count - warmup.instrunctions_count
-    ) // total_iters
-    adjusted_cycles = (report.cycles_count - warmup.cycles_count) // total_iters
+    ) // iters.main
+    adjusted_cycles = (report.cycles_count - warmup.cycles_count) // iters.main
 
     return Report(
         name=report.name,
